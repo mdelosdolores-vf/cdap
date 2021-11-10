@@ -98,10 +98,6 @@ public class SupportBundleService implements Closeable {
     String uuid = UUID.randomUUID().toString();
     File uuidPath = new File(localDir, uuid);
 
-    SupportBundleStatus supportBundleStatus =
-      new SupportBundleStatus(uuid, System.currentTimeMillis(), supportBundleConfiguration,
-                              CollectionState.IN_PROGRESS);
-
     // Puts all the files under the uuid path
     File baseDirectory = new File(localDir);
     DirUtils.mkdirs(baseDirectory);
@@ -114,6 +110,11 @@ public class SupportBundleService implements Closeable {
       deleteOldFolders(oldFilesDirectory);
     }
     DirUtils.mkdirs(uuidPath);
+
+    SupportBundleStatus supportBundleStatus =
+      new SupportBundleStatus(uuid, System.currentTimeMillis(), supportBundleConfiguration,
+                              CollectionState.IN_PROGRESS);
+    addToStatus(supportBundleStatus, uuidPath.getPath());
 
     SupportBundleJob supportBundleJob =
       new SupportBundleJob(supportBundleTaskFactories, executorService, cConf, supportBundleStatus);
@@ -133,6 +134,21 @@ public class SupportBundleService implements Closeable {
     return uuid;
   }
 
+  /** Ensure previous executor has finished all the jobs and tasks before starting a new one */
+  public String ensurePreviousExecutorFinish() throws IOException {
+    File baseDirectory = new File(localDir);
+    int fileCount = DirUtils.list(baseDirectory).size();
+    if (fileCount == 0) {
+      return null;
+    }
+    File latestDirectory = getLatestFolder(baseDirectory);
+    SupportBundleStatus supportBundleStatus = getSingleBundleJson(latestDirectory);
+    if (supportBundleStatus.getStatus() == CollectionState.IN_PROGRESS) {
+      return GSON.toJson(supportBundleStatus);
+    }
+    return null;
+  }
+
   /**
    * Gets oldest folder from the root directory
    */
@@ -147,6 +163,16 @@ public class SupportBundleService implements Closeable {
         throw new RuntimeException("Failed to get file status ", e);
       }
     }).thenComparing(File::lastModified));
+  }
+
+  /**
+   * Gets latest folder from the root directory
+   */
+  private File getLatestFolder(File baseDirectory) {
+    List<File> uuidFiles = DirUtils.listFiles(baseDirectory).stream()
+      .filter(file -> !file.getName().startsWith(".") && !file.isHidden() && file.isDirectory())
+      .collect(Collectors.toList());
+    return Collections.max(uuidFiles, Comparator.comparing(File::lastModified));
   }
 
   /**

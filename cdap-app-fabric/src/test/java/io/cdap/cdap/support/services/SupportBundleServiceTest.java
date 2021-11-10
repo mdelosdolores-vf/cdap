@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Support bundle service tests.
@@ -61,9 +62,10 @@ public class SupportBundleServiceTest extends AppFabricTestBase {
     List<String> bundleIdList = new ArrayList<>();
     for (int i = 0; i < 7; i++) {
       HttpResponse response = doPost(path);
-      Assert.assertEquals(HttpResponseStatus.OK.code(), response.getResponseCode());
+      Assert.assertEquals(HttpResponseStatus.CREATED.code(), response.getResponseCode());
       String bundleId = response.getResponseBodyAsString();
       bundleIdList.add(bundleId);
+      TimeUnit.MILLISECONDS.sleep(100);
     }
 
     File bundleFile = new File(tempFolder, bundleIdList.get(4));

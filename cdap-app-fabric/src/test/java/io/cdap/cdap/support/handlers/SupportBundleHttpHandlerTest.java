@@ -29,23 +29,23 @@ import org.junit.Test;
 public class SupportBundleHttpHandlerTest extends AppFabricTestBase {
 
   @Test
-  public void testCreateSupportBundleWithValidNamespace() throws Exception {
+  public void testCreateSupportBundle() throws Exception {
     createNamespace("default");
     String path =
-        String.format("%s/support/bundle?namespaceId=default", Constants.Gateway.API_VERSION_3);
+      String.format("%s/support/bundle", Constants.Gateway.API_VERSION_3);
     HttpResponse response = doPost(path);
-    Assert.assertEquals(HttpResponseStatus.OK.code(), response.getResponseCode());
+    Assert.assertEquals(HttpResponseStatus.CREATED.code(), response.getResponseCode());
 
     Assert.assertNotNull(response.getResponseBodyAsString());
   }
 
   @Test
-  public void testCreateSupportBundleWithMaxRunsSpecified() throws Exception {
+  public void testCreateSupportBundleWithValidNamespace() throws Exception {
     createNamespace("default");
     String path =
-        String.format("%s/support/bundle?max-runs-per-pipeline=2", Constants.Gateway.API_VERSION_3);
+        String.format("%s/support/bundle?namespaceId=default", Constants.Gateway.API_VERSION_3);
     HttpResponse response = doPost(path);
-    Assert.assertEquals(HttpResponseStatus.OK.code(), response.getResponseCode());
+    Assert.assertEquals(HttpResponseStatus.CREATED.code(), response.getResponseCode());
 
     Assert.assertNotNull(response.getResponseBodyAsString());
   }

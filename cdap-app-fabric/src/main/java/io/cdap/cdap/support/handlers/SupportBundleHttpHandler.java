@@ -25,8 +25,6 @@ import io.cdap.cdap.support.status.SupportBundleConfiguration;
 import io.cdap.http.HttpResponder;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.DefaultValue;
@@ -40,7 +38,6 @@ import javax.ws.rs.QueryParam;
 @Path(Constants.Gateway.API_VERSION_3)
 public class SupportBundleHttpHandler extends AbstractAppFabricHttpHandler {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SupportBundleHttpHandler.class);
   private final SupportBundleService bundleService;
 
   @Inject
@@ -65,16 +62,20 @@ public class SupportBundleHttpHandler extends AbstractAppFabricHttpHandler {
                                   @Nullable @QueryParam("application") String application,
                                   @Nullable @QueryParam("programType") @DefaultValue("workflows") String programType,
                                   @Nullable @QueryParam("programId") @DefaultValue("DataPipelineWorkflow")
-                                      String programName,
-                                  @Nullable @QueryParam("run") String run,
+                                    String programName, @Nullable @QueryParam("run") String run,
                                   @Nullable @QueryParam("maxRunsPerProgram") @DefaultValue("1")
-                                      Integer maxRunsPerProgram) throws Exception {
+                                    Integer maxRunsPerProgram) throws Exception {
     // Establishes the support bundle configuration
     SupportBundleConfiguration bundleConfig =
       new SupportBundleConfiguration(namespace, application, run, ProgramType.valueOfCategoryName(programType),
                                      programName, maxRunsPerProgram);
-    // Generates support bundle and returns with uuid
-    String uuid = bundleService.generateSupportBundle(bundleConfig);
-    responder.sendString(HttpResponseStatus.OK, uuid);
+    String status = bundleService.ensurePreviousExecutorFinish();
+    if (status == null) {
+      // Generates support bundle and returns with uuid
+      String uuid = bundleService.generateSupportBundle(bundleConfig);
+      responder.sendString(HttpResponseStatus.CREATED, uuid);
+    } else {
+      responder.sendString(HttpResponseStatus.OK, status);
+    }
   }
 }
