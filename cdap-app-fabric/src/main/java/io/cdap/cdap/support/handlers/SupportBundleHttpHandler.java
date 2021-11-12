@@ -57,25 +57,27 @@ public class SupportBundleHttpHandler extends AbstractAppFabricHttpHandler {
    */
   @POST
   @Path("/support/bundle")
-  public void createSupportBundle(HttpRequest request, HttpResponder responder,
+  public void createSupportBundle(HttpRequest request,
+                                  HttpResponder responder,
                                   @Nullable @QueryParam("namespace") String namespace,
                                   @Nullable @QueryParam("application") String application,
                                   @Nullable @QueryParam("programType") @DefaultValue("workflows") String programType,
                                   @Nullable @QueryParam("programId") @DefaultValue("DataPipelineWorkflow")
-                                    String programName, @Nullable @QueryParam("run") String run,
+                                    String programName,
+                                  @Nullable @QueryParam("run") String run,
                                   @Nullable @QueryParam("maxRunsPerProgram") @DefaultValue("1")
                                     Integer maxRunsPerProgram) throws Exception {
     // Establishes the support bundle configuration
     SupportBundleConfiguration bundleConfig =
       new SupportBundleConfiguration(namespace, application, run, ProgramType.valueOfCategoryName(programType),
                                      programName, maxRunsPerProgram);
-    String status = bundleService.ensurePreviousExecutorFinish();
-    if (status == null) {
+    String prevInProgressUUID = bundleService.ensurePreviousExecutorFinish();
+    if (prevInProgressUUID == null) {
       // Generates support bundle and returns with uuid
       String uuid = bundleService.generateSupportBundle(bundleConfig);
       responder.sendString(HttpResponseStatus.CREATED, uuid);
     } else {
-      responder.sendString(HttpResponseStatus.OK, status);
+      responder.sendString(HttpResponseStatus.OK, prevInProgressUUID);
     }
   }
 }

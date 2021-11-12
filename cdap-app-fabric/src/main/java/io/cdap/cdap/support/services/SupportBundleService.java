@@ -144,7 +144,7 @@ public class SupportBundleService implements Closeable {
     File latestDirectory = getLatestFolder(baseDirectory);
     SupportBundleStatus supportBundleStatus = getSingleBundleJson(latestDirectory);
     if (supportBundleStatus.getStatus() == CollectionState.IN_PROGRESS) {
-      return GSON.toJson(supportBundleStatus);
+      return supportBundleStatus.getBundleId();
     }
     return null;
   }
