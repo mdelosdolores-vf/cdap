@@ -219,7 +219,7 @@ public class KubeTwillRunnerService implements TwillRunnerService {
         watcher.start();
       });
 
-      // start job cleaner service
+      // start job cleaner service. Job cleaner is scheduled when TwillController is created
       jobCleanerService =
         Executors.newSingleThreadScheduledExecutor(Threads.createDaemonThreadFactory("kube-job-cleaner"));
       jobCleanerService.scheduleAtFixedRate(new KubeJobCleaner(batchV1Api, selector, jobCleanBatchSize),
