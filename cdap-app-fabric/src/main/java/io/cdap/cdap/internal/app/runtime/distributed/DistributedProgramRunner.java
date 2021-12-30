@@ -17,13 +17,19 @@
 package io.cdap.cdap.internal.app.runtime.distributed;
 
 import ch.qos.logback.classic.Level;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.PrivateModule;
+import com.google.inject.Scopes;
 import io.cdap.cdap.api.annotation.TransactionControl;
 import io.cdap.cdap.api.app.ApplicationSpecification;
+import io.cdap.cdap.api.metrics.MetricsCollectionService;
 import io.cdap.cdap.app.guice.ClusterMode;
 import io.cdap.cdap.app.program.Program;
 import io.cdap.cdap.app.runtime.Arguments;
@@ -35,6 +41,7 @@ import io.cdap.cdap.common.app.MainClassLoader;
 import io.cdap.cdap.common.conf.CConfiguration;
 import io.cdap.cdap.common.conf.CConfigurationUtil;
 import io.cdap.cdap.common.conf.Constants;
+import io.cdap.cdap.common.guice.ConfigModule;
 import io.cdap.cdap.common.lang.ClassLoaders;
 import io.cdap.cdap.common.lang.CombineClassLoader;
 import io.cdap.cdap.common.lang.jar.BundleJarUtil;
@@ -43,6 +50,8 @@ import io.cdap.cdap.common.logging.LoggingContext;
 import io.cdap.cdap.common.logging.LoggingContextAccessor;
 import io.cdap.cdap.common.twill.TwillAppLifecycleEventHandler;
 import io.cdap.cdap.common.utils.DirUtils;
+import io.cdap.cdap.data.runtime.StorageModule;
+import io.cdap.cdap.data.runtime.SystemDatasetRuntimeModule;
 import io.cdap.cdap.data2.util.hbase.HBaseTableUtilFactory;
 import io.cdap.cdap.internal.app.ApplicationSpecificationAdapter;
 import io.cdap.cdap.internal.app.runtime.BasicArguments;
@@ -57,15 +66,20 @@ import io.cdap.cdap.logging.context.LoggingContextHelper;
 import io.cdap.cdap.master.spi.twill.SecretDisk;
 import io.cdap.cdap.master.spi.twill.SecureTwillPreparer;
 import io.cdap.cdap.master.spi.twill.SecurityContext;
+import io.cdap.cdap.metrics.collect.LocalMetricsCollectionService;
+import io.cdap.cdap.proto.id.NamespaceId;
 import io.cdap.cdap.proto.id.ProgramRunId;
 import io.cdap.cdap.security.impersonation.Impersonator;
 import io.cdap.cdap.security.store.SecureStoreUtils;
+import io.cdap.cdap.spi.data.transaction.TransactionRunner;
 import io.cdap.cdap.spi.hbase.HBaseDDLExecutor;
+import io.cdap.cdap.store.DefaultNamespaceStore;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.tephra.TxConstants;
+import org.apache.tephra.runtime.TransactionModules;
 import org.apache.twill.api.Configs;
 import org.apache.twill.api.EventHandler;
 import org.apache.twill.api.TwillController;
@@ -334,6 +348,10 @@ public abstract class DistributedProgramRunner implements ProgramRunner, Program
           .withApplicationArguments(PROGRAM_OPTIONS_FILE_NAME)
           // Use the MainClassLoader for class rewriting
           .setClassLoader(MainClassLoader.class.getName());
+
+        // Add namespace details
+        Injector injector = createInjector();
+        twillPreparer.withConfiguration(getNamespaceConfigs(program.getNamespaceId(), injector));
 
         TwillController twillController;
         // Change the context classloader to the combine classloader of this ProgramRunner and
@@ -748,5 +766,29 @@ public abstract class DistributedProgramRunner implements ProgramRunner, Program
     }
 
     return dependencies;
+  }
+
+  /**
+   * Get namespace details for the {@link TwillPreparer} configuration
+   */
+  @VisibleForTesting
+  Map<String, String> getNamespaceConfigs(String namespace, Injector injector) {
+    DefaultNamespaceStore nsStore = new DefaultNamespaceStore(injector.getInstance(TransactionRunner.class));
+    return nsStore.get(new NamespaceId(namespace)).getConfig().getConfigs();
+  }
+
+  private Injector createInjector() {
+    return Guice.createInjector(
+      new ConfigModule(CConfiguration.create()),
+      new SystemDatasetRuntimeModule().getStandaloneModules(),
+      new TransactionModules().getSingleNodeModules(),
+      new StorageModule(),
+      new PrivateModule() {
+        @Override
+        protected void configure() {
+          bind(MetricsCollectionService.class).to(LocalMetricsCollectionService.class).in(Scopes.SINGLETON);
+          expose(MetricsCollectionService.class);
+        }
+      });
   }
 }

@@ -167,6 +167,7 @@ class KubeTwillPreparer implements DependentTwillPreparer, StatefulTwillPreparer
   private String mainRunnableName;
   private Set<String> dependentRunnableNames;
   private String serviceAccountName;
+  private String programRuntimeNamespace;
 
   KubeTwillPreparer(MasterEnvironmentContext masterEnvContext, ApiClient apiClient, String kubeNamespace,
                     PodInfo podInfo, TwillSpecification spec, RunId twillRunId, Location appLocation,
@@ -176,6 +177,7 @@ class KubeTwillPreparer implements DependentTwillPreparer, StatefulTwillPreparer
     this.apiClient = apiClient;
     this.batchV1Api = new BatchV1Api(apiClient);
     this.kubeNamespace = kubeNamespace;
+    this.programRuntimeNamespace = kubeNamespace;
     this.podInfo = podInfo;
     this.runnables = spec.getRunnables().keySet();
     this.arguments = new ArrayList<>();
@@ -306,10 +308,17 @@ class KubeTwillPreparer implements DependentTwillPreparer, StatefulTwillPreparer
     return this;
   }
 
+  /**
+   * Use {@link KubeMasterEnvironment#NAMESPACE_PROPERTY} if given as the namespace the program runs on.
+   */
   @Override
   public TwillPreparer withConfiguration(Map<String, String> config) {
-    for (String runnableName : runnables) {
-      withEnv(runnableName, config);
+    if (config.containsKey(KubeMasterEnvironment.NAMESPACE_PROPERTY)) {
+      programRuntimeNamespace = config.get(KubeMasterEnvironment.NAMESPACE_PROPERTY);
+    } else {
+      for (String runnableName : runnables) {
+        withEnv(runnableName, config);
+      }
     }
     return this;
   }
@@ -654,7 +663,7 @@ class KubeTwillPreparer implements DependentTwillPreparer, StatefulTwillPreparer
       .endSpec()
       .build();
     try {
-      batchV1Api.createNamespacedJob(kubeNamespace, job, "true", null, null);
+      batchV1Api.createNamespacedJob(programRuntimeNamespace, job, "true", null, null);
       LOG.trace("Created Job {} in Kubernetes.", metadata.getName());
     } catch (ApiException e) {
       if (e.getCode() == HttpURLConnection.HTTP_CONFLICT) {
@@ -676,7 +685,7 @@ class KubeTwillPreparer implements DependentTwillPreparer, StatefulTwillPreparer
 
     V1Deployment deployment = buildDeployment(metadata, runtimeSpecs, runtimeConfigLocation);
 
-    deployment = appsApi.createNamespacedDeployment(kubeNamespace, deployment, "true", null, null);
+    deployment = appsApi.createNamespacedDeployment(programRuntimeNamespace, deployment, "true", null, null);
     LOG.info("Created Deployment {} in Kubernetes", metadata.getName());
     return deployment.getMetadata();
   }
@@ -692,7 +701,7 @@ class KubeTwillPreparer implements DependentTwillPreparer, StatefulTwillPreparer
 
     V1StatefulSet statefulSet = buildStatefulSet(metadata, runtimeSpecs, runtimeConfigLocation, statefulRunnable);
 
-    statefulSet = appsApi.createNamespacedStatefulSet(kubeNamespace, statefulSet, "true", null, null);
+    statefulSet = appsApi.createNamespacedStatefulSet(programRuntimeNamespace, statefulSet, "true", null, null);
     LOG.info("Created StatefulSet {} in Kubernetes", metadata.getName());
     return statefulSet.getMetadata();
   }

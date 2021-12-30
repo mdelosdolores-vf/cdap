@@ -107,7 +107,7 @@ public class KubeMasterEnvironment implements MasterEnvironment {
   private static final Logger LOG = LoggerFactory.getLogger(KubeMasterEnvironment.class);
 
   @VisibleForTesting
-  static final String NAMESPACE_PROPERTY = "k8s.namespace";
+  public static final String NAMESPACE_PROPERTY = "k8s.namespace";
   static final String NAMESPACE_CPU_LIMIT_PROPERTY = "k8s.namespace.cpu.limits";
   static final String NAMESPACE_MEMORY_LIMIT_PROPERTY = "k8s.namespace.memory.limits";
 
