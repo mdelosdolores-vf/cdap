@@ -586,6 +586,7 @@ class KubeTwillPreparer implements DependentTwillPreparer, StatefulTwillPreparer
       .withOwnerReferences(podInfo.getOwnerReferences())
       .addToLabels(extraLabels)
       .addToLabels(podInfo.getContainerLabelName(), runnableName)
+      .addToLabels(KubeMasterEnvironment.NAMESPACE_PROPERTY, programRuntimeNamespace)
       .addToAnnotations(KubeTwillRunnerService.APP_LABEL, twillSpec.getName())
       .addToAnnotations(KubeTwillRunnerService.START_TIMEOUT_ANNOTATION, Long.toString(startTimeoutMillis))
       .build();
