@@ -104,10 +104,10 @@ import java.util.zip.GZIPOutputStream;
  */
 public class KubeMasterEnvironment implements MasterEnvironment {
   public static final String DISABLE_POD_DELETION = "disablePodDeletion";
+  public static final String NAMESPACE_PROPERTY = "k8s.namespace";
   private static final Logger LOG = LoggerFactory.getLogger(KubeMasterEnvironment.class);
 
   @VisibleForTesting
-  public static final String NAMESPACE_PROPERTY = "k8s.namespace";
   static final String NAMESPACE_CPU_LIMIT_PROPERTY = "k8s.namespace.cpu.limits";
   static final String NAMESPACE_MEMORY_LIMIT_PROPERTY = "k8s.namespace.memory.limits";
 

@@ -27,6 +27,7 @@ import io.cdap.cdap.app.runtime.ProgramController;
 import io.cdap.cdap.app.runtime.ProgramOptions;
 import io.cdap.cdap.common.conf.CConfiguration;
 import io.cdap.cdap.common.conf.Constants;
+import io.cdap.cdap.common.namespace.NamespaceQueryAdmin;
 import io.cdap.cdap.internal.app.runtime.batch.distributed.MapReduceContainerHelper;
 import io.cdap.cdap.proto.ProgramType;
 import io.cdap.cdap.proto.id.ProgramRunId;
@@ -50,8 +51,9 @@ public final class DistributedMapReduceProgramRunner extends DistributedProgramR
   @Inject
   DistributedMapReduceProgramRunner(CConfiguration cConf, YarnConfiguration hConf,
                                     Impersonator impersonator, ClusterMode clusterMode,
-                                    @Constants.AppFabric.ProgramRunner TwillRunner twillRunner) {
-    super(cConf, hConf, impersonator, clusterMode, twillRunner);
+                                    @Constants.AppFabric.ProgramRunner TwillRunner twillRunner,
+                                    NamespaceQueryAdmin namespaceQueryAdmin) {
+    super(cConf, hConf, impersonator, clusterMode, twillRunner, namespaceQueryAdmin);
   }
 
   @Override

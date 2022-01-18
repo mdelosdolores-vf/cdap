@@ -41,6 +41,7 @@ import io.cdap.cdap.app.runtime.ProgramRunner;
 import io.cdap.cdap.app.runtime.ProgramRunnerFactory;
 import io.cdap.cdap.common.conf.CConfiguration;
 import io.cdap.cdap.common.conf.Constants;
+import io.cdap.cdap.common.namespace.NamespaceQueryAdmin;
 import io.cdap.cdap.internal.app.runtime.BasicArguments;
 import io.cdap.cdap.internal.app.runtime.SimpleProgramOptions;
 import io.cdap.cdap.internal.app.runtime.SystemArguments;
@@ -82,8 +83,9 @@ public final class DistributedWorkflowProgramRunner extends DistributedProgramRu
   DistributedWorkflowProgramRunner(CConfiguration cConf, YarnConfiguration hConf,
                                    Impersonator impersonator, ClusterMode clusterMode,
                                    @Constants.AppFabric.ProgramRunner TwillRunner twillRunner,
-                                   @Constants.AppFabric.ProgramRunner ProgramRunnerFactory programRunnerFactory) {
-    super(cConf, hConf, impersonator, clusterMode, twillRunner);
+                                   @Constants.AppFabric.ProgramRunner ProgramRunnerFactory programRunnerFactory,
+                                   NamespaceQueryAdmin namespaceQueryAdmin) {
+    super(cConf, hConf, impersonator, clusterMode, twillRunner, namespaceQueryAdmin);
     this.programRunnerFactory = programRunnerFactory;
   }
 

@@ -16,24 +16,18 @@
 
 package io.cdap.cdap.internal.app.runtime.distributed;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Scopes;
-import io.cdap.cdap.api.metrics.MetricsCollectionService;
 import io.cdap.cdap.app.guice.ClusterMode;
 import io.cdap.cdap.common.conf.CConfiguration;
-import io.cdap.cdap.common.guice.ConfigModule;
-import io.cdap.cdap.common.metrics.NoOpMetricsCollectionService;
-import io.cdap.cdap.data.runtime.StorageModule;
-import io.cdap.cdap.data.runtime.SystemDatasetRuntimeModule;
+import io.cdap.cdap.common.namespace.NamespaceQueryAdmin;
+import io.cdap.cdap.internal.guice.AppFabricTestModule;
 import io.cdap.cdap.proto.NamespaceMeta;
 import io.cdap.cdap.spi.data.StructuredTableAdmin;
 import io.cdap.cdap.spi.data.transaction.TransactionRunner;
 import io.cdap.cdap.store.DefaultNamespaceStore;
 import io.cdap.cdap.store.StoreDefinition;
 import org.apache.tephra.TransactionManager;
-import org.apache.tephra.runtime.TransactionModules;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -49,31 +43,23 @@ public class DistributedProgramRunnerTest {
 
   private static DefaultNamespaceStore nsStore;
   private static DistributedProgramRunner distributedProgramRunner;
-  private static Injector injector;
+  private static NamespaceQueryAdmin namespaceQueryAdmin;
   private static TransactionManager txManager;
 
   @BeforeClass
   public static void setup() throws Exception {
     CConfiguration cConf = CConfiguration.create();
-    injector = Guice.createInjector(
-      new ConfigModule(cConf),
-      new SystemDatasetRuntimeModule().getInMemoryModules(),
-      new TransactionModules().getInMemoryModules(),
-      new StorageModule(),
-      new AbstractModule() {
-        @Override
-        protected void configure() {
-          bind(MetricsCollectionService.class).to(NoOpMetricsCollectionService.class).in(Scopes.SINGLETON);
-        }
-      });
+    Injector injector = Guice.createInjector(new AppFabricTestModule(CConfiguration.create()));
     nsStore = new DefaultNamespaceStore(injector.getInstance(TransactionRunner.class));
+    namespaceQueryAdmin = injector.getInstance(NamespaceQueryAdmin.class);
     txManager = injector.getInstance(TransactionManager.class);
     txManager.startAndWait();
 
     // Define all StructuredTable before starting any services that need StructuredTable
     StoreDefinition.createAllTables(injector.getInstance(StructuredTableAdmin.class));
 
-    distributedProgramRunner = new DistributedServiceProgramRunner(cConf, null, null, ClusterMode.ON_PREMISE, null);
+    distributedProgramRunner = new DistributedServiceProgramRunner(cConf, null, null, ClusterMode.ON_PREMISE, null,
+                                                                   namespaceQueryAdmin);
   }
 
   @AfterClass
@@ -82,11 +68,11 @@ public class DistributedProgramRunnerTest {
   }
 
   @Test
-  public void testGetNamespaceConfigs() {
+  public void testGetNamespaceConfigs() throws Exception {
     NamespaceMeta meta = new NamespaceMeta.Builder().setName(NAMESPACE).setConfig(CONFIGS).build();
     nsStore.create(meta);
 
-    Map<String, String> foundNamespaceConfigs = distributedProgramRunner.getNamespaceConfigs(NAMESPACE, injector);
+    Map<String, String> foundNamespaceConfigs = distributedProgramRunner.getNamespaceConfigs(NAMESPACE);
     Assert.assertTrue(foundNamespaceConfigs.entrySet().containsAll(CONFIGS.entrySet()));
   }
 }

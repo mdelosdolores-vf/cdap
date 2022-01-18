@@ -48,6 +48,7 @@ import io.cdap.cdap.common.lang.jar.BundleJarUtil;
 import io.cdap.cdap.common.logging.LoggerLogHandler;
 import io.cdap.cdap.common.logging.LoggingContext;
 import io.cdap.cdap.common.logging.LoggingContextAccessor;
+import io.cdap.cdap.common.namespace.NamespaceQueryAdmin;
 import io.cdap.cdap.common.twill.TwillAppLifecycleEventHandler;
 import io.cdap.cdap.common.utils.DirUtils;
 import io.cdap.cdap.data.runtime.StorageModule;
@@ -145,14 +146,17 @@ public abstract class DistributedProgramRunner implements ProgramRunner, Program
   protected final ClusterMode clusterMode;
   private final TwillRunner twillRunner;
   private final Impersonator impersonator;
+  private final NamespaceQueryAdmin namespaceQueryAdmin;
 
   protected DistributedProgramRunner(CConfiguration cConf, Configuration hConf, Impersonator impersonator,
-                                     ClusterMode clusterMode, TwillRunner twillRunner) {
+                                     ClusterMode clusterMode, TwillRunner twillRunner,
+                                     NamespaceQueryAdmin namespaceQueryAdmin) {
     this.twillRunner = twillRunner;
     this.hConf = hConf;
     this.cConf = cConf;
     this.impersonator = impersonator;
     this.clusterMode = clusterMode;
+    this.namespaceQueryAdmin = namespaceQueryAdmin;
   }
 
   /**
@@ -350,8 +354,7 @@ public abstract class DistributedProgramRunner implements ProgramRunner, Program
           .setClassLoader(MainClassLoader.class.getName());
 
         // Add namespace details
-        Injector injector = createInjector();
-        twillPreparer.withConfiguration(getNamespaceConfigs(program.getNamespaceId(), injector));
+        twillPreparer.withConfiguration(getNamespaceConfigs(program.getNamespaceId()));
 
         TwillController twillController;
         // Change the context classloader to the combine classloader of this ProgramRunner and
@@ -772,23 +775,7 @@ public abstract class DistributedProgramRunner implements ProgramRunner, Program
    * Get namespace details for the {@link TwillPreparer} configuration
    */
   @VisibleForTesting
-  Map<String, String> getNamespaceConfigs(String namespace, Injector injector) {
-    DefaultNamespaceStore nsStore = new DefaultNamespaceStore(injector.getInstance(TransactionRunner.class));
-    return nsStore.get(new NamespaceId(namespace)).getConfig().getConfigs();
-  }
-
-  private Injector createInjector() {
-    return Guice.createInjector(
-      new ConfigModule(CConfiguration.create()),
-      new SystemDatasetRuntimeModule().getStandaloneModules(),
-      new TransactionModules().getSingleNodeModules(),
-      new StorageModule(),
-      new PrivateModule() {
-        @Override
-        protected void configure() {
-          bind(MetricsCollectionService.class).to(LocalMetricsCollectionService.class).in(Scopes.SINGLETON);
-          expose(MetricsCollectionService.class);
-        }
-      });
+  Map<String, String> getNamespaceConfigs(String namespace) throws Exception {
+    return namespaceQueryAdmin.get(new NamespaceId(namespace)).getConfig().getConfigs();
   }
 }

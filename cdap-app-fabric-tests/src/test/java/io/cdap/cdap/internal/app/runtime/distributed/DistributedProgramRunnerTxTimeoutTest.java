@@ -35,6 +35,8 @@ import io.cdap.cdap.app.runtime.ProgramOptions;
 import io.cdap.cdap.app.runtime.spark.distributed.DistributedSparkProgramRunner;
 import io.cdap.cdap.common.conf.CConfiguration;
 import io.cdap.cdap.common.id.Id;
+import io.cdap.cdap.common.namespace.NamespaceQueryAdmin;
+import io.cdap.cdap.common.namespace.SimpleNamespaceQueryAdmin;
 import io.cdap.cdap.internal.app.runtime.BasicArguments;
 import io.cdap.cdap.internal.app.runtime.SimpleProgramOptions;
 import io.cdap.cdap.internal.app.runtime.SystemArguments;
@@ -75,14 +77,19 @@ public class DistributedProgramRunnerTxTimeoutTest {
     app.configure(configurer, () -> null);
     appSpec = configurer.createSpecification("app", "1.0");
     // System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(appSpec));
+    NamespaceQueryAdmin namespaceQueryAdmin = new SimpleNamespaceQueryAdmin();
 
     cConf.setInt(TxConstants.Manager.CFG_TX_MAX_TIMEOUT, 60);
-    serviceRunner = new DistributedServiceProgramRunner(cConf, yConf, null, ClusterMode.ON_PREMISE, null);
-    workerRunner = new DistributedWorkerProgramRunner(cConf, yConf, null, ClusterMode.ON_PREMISE, null);
-    mapreduceRunner = new DistributedMapReduceProgramRunner(cConf, yConf, null, ClusterMode.ON_PREMISE, null);
+    serviceRunner = new DistributedServiceProgramRunner(cConf, yConf, null, ClusterMode.ON_PREMISE, null,
+                                                        namespaceQueryAdmin);
+    workerRunner = new DistributedWorkerProgramRunner(cConf, yConf, null, ClusterMode.ON_PREMISE, null,
+                                                      namespaceQueryAdmin);
+    mapreduceRunner = new DistributedMapReduceProgramRunner(cConf, yConf, null, ClusterMode.ON_PREMISE, null,
+                                                            namespaceQueryAdmin);
     sparkRunner = new DistributedSparkProgramRunner(SparkCompat.SPARK2_2_11, cConf, yConf, null, null,
-                                                    ClusterMode.ON_PREMISE, null);
-    workflowRunner = new DistributedWorkflowProgramRunner(cConf, yConf, null, ClusterMode.ON_PREMISE, null, null);
+                                                    ClusterMode.ON_PREMISE, null, namespaceQueryAdmin);
+    workflowRunner = new DistributedWorkflowProgramRunner(cConf, yConf, null, ClusterMode.ON_PREMISE, null, null,
+                                                          namespaceQueryAdmin);
   }
 
   @Test
