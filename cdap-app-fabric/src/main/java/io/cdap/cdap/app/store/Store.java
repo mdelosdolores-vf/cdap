@@ -153,6 +153,17 @@ public interface Store {
   void setResume(ProgramRunId id, byte[] sourceId, long resumeTime);
 
   /**
+   * Logs stopping of a program run and sets the run status to {@link ProgramRunStatus#STOPPING}.
+   *
+   * @param id run id of the program
+   * @param sourceId id of the source of program run status, which is proportional to the timestamp of
+   *                 when the current program run status is reached
+   * @param stoppingTsSecs time at which stopping command was issued
+   * @param terminateTsSecs time at which the program has to be terminated
+   */
+  void setStopping(ProgramRunId id, byte[] sourceId, long stoppingTsSecs, long terminateTsSecs);
+
+  /**
    * Loads a given program.
    *
    * @param program id of the program

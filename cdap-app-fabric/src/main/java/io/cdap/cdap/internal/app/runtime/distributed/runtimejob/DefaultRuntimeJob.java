@@ -265,7 +265,9 @@ public class DefaultRuntimeJob implements RuntimeJob {
       try (Program program = createProgram(cConf, programRunner, programDescriptor, programOpts)) {
         ProgramController controller = programRunner.run(program, programOpts);
         controllerFuture.complete(controller);
+        LOG.info("---Inside DRJ, will call on stop requested now---");
         runtimeClientService.onProgramStopRequested(controller::stop);
+        LOG.info("---on stop requested called from default runtime job---");
 
         controller.addListener(new AbstractListener() {
           @Override

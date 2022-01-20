@@ -37,6 +37,8 @@ import io.cdap.cdap.proto.Notification;
 import io.cdap.cdap.proto.ProgramRunStatus;
 import io.cdap.cdap.proto.id.NamespaceId;
 import io.cdap.cdap.proto.id.ProgramRunId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -51,6 +53,7 @@ public final class MessagingProgramStateWriter implements ProgramStateWriter {
     ApplicationSpecificationAdapter.addTypeAdapters(new GsonBuilder())
       .registerTypeAdapter(Arguments.class, new ArgumentsCodec())
       .registerTypeAdapter(ProgramOptions.class, new ProgramOptionsCodec()).create();
+  private static final Logger LOG = LoggerFactory.getLogger(MessagingProgramStateWriter.class);
 
   private final ProgramStatePublisher programStatePublisher;
 
@@ -105,7 +108,9 @@ public final class MessagingProgramStateWriter implements ProgramStateWriter {
       .put(ProgramOptionConstants.STOPPING_TIME, String.valueOf(stoppingTs))
       .put(ProgramOptionConstants.TERMINATE_TIME, String.valueOf(terminateTs))
       .put(ProgramOptionConstants.PROGRAM_STATUS, ProgramRunStatus.STOPPING.name()).build();
+    LOG.info("---publishing to tms properties - {}---", properties);
     programStatePublisher.publish(Notification.Type.PROGRAM_STATUS, properties);
+    LOG.info("---published to tms in writer---");
   }
 
   @Override

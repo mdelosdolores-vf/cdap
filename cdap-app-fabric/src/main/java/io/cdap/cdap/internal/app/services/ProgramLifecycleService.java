@@ -571,6 +571,17 @@ public class ProgramLifecycleService {
     return runId;
   }
 
+  public RunId publishStoppingToTms(ProgramId programId, int gracefulShutdownSecs) {
+    LOG.info("---programId is {}---", programId);
+    RunId runId = RunIds.generate();
+    ProgramRunId programRunId = programId.run(runId);
+    LOG.info("---Publishing programRunId - {}, gracefulShutdownSecs - {} to tms---", programRunId,
+             gracefulShutdownSecs);
+    programStateWriter.stop(programRunId, gracefulShutdownSecs);
+    LOG.info("---published to tms---");
+    return runId;
+  }
+
   @VisibleForTesting
   ProgramOptions createProgramOptions(ProgramId programId, Map<String, String> userArgs, Map<String, String> sysArgs,
                                       boolean debug) throws NotFoundException, ProfileConflictException {

@@ -78,7 +78,6 @@ public class DataStreamsPipelineSpecGenerator
 
     DataStreamsPipelineSpec.Builder specBuilder = DataStreamsPipelineSpec.builder(batchIntervalMillis, pipelineId)
       .setExtraJavaOpts(config.getExtraJavaOpts())
-      .setStopGracefully(config.getStopGracefully())
       .setIsUnitTest(config.isUnitTest())
       .setCheckpointsDisabled(config.checkpointsDisabled());
     String checkpointDir = config.getCheckpointDir();

@@ -36,6 +36,8 @@ import io.cdap.common.http.HttpMethod;
 import org.apache.avro.Schema;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +60,7 @@ import javax.ws.rs.core.MediaType;
  * The client for talking to the {@link RuntimeServer}.
  */
 public class RuntimeClient {
-
+  private static final Logger LOG = LoggerFactory.getLogger(RuntimeClient.class);
   private static final Gson GSON = new Gson();
   static final int CHUNK_SIZE = 1 << 15;  // 32K
 
@@ -125,6 +127,7 @@ public class RuntimeClient {
       try (Reader reader = new InputStreamReader(urlConn.getInputStream(), StandardCharsets.UTF_8)) {
         ProgramRunInfo responseBody = GSON.fromJson(reader, ProgramRunInfo.class);
         if (responseBody.getProgramRunStatus() == ProgramRunStatus.STOPPING) {
+          LOG.info("---Stopping event received in RTC. Will complete future now---");
           stopFuture.complete(null);
         }
       }
@@ -138,6 +141,7 @@ public class RuntimeClient {
    * @param stopper Runnable that runs in a daemon thread
    */
   public void onProgramStopRequested(Runnable stopper) {
+    LOG.info("---Called onstoprequested in rtc---");
     stopFuture.thenRunAsync(stopper,
                            command -> {
                              Thread t = new Thread(command, "stop-program");

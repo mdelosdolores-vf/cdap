@@ -298,11 +298,20 @@ public class ProgramLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
                                   @PathParam("app-id") String appId,
                                   @PathParam("program-type") String type,
                                   @PathParam("program-id") String programId,
-                                  @PathParam("run-id") String runId) throws Exception {
+                                  @PathParam("run-id") String runId,
+                                  @QueryParam("graceful") String gracefulShutdownSecs) throws Exception {
     ProgramType programType = getProgramType(type);
     ProgramId program = new ProgramId(namespaceId, appId, programType, programId);
-    lifecycleService.stop(program, runId);
-    responder.sendStatus(HttpResponseStatus.OK);
+    ProgramRunId programRunId = program.run(runId);
+    LOG.info("---ProgramType - {}, programId - {}, programRunId - {}", programType, programId, programRunId);
+    if (gracefulShutdownSecs != null) {
+      LOG.info("---graceful shutdown value is {}---", gracefulShutdownSecs);
+      //
+    } else {
+      LOG.info("---graceful shutdown value is null---");
+      lifecycleService.stop(program, runId);
+      responder.sendStatus(HttpResponseStatus.OK);
+    }
   }
 
   @POST
@@ -1271,28 +1280,46 @@ public class ProgramLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
   @Path("/stop")
   @AuditPolicy({AuditDetail.REQUEST_BODY, AuditDetail.RESPONSE_BODY})
   public void stopPrograms(FullHttpRequest request, HttpResponder responder,
-                           @PathParam("namespace-id") String namespaceId) throws Exception {
-
+                           @PathParam("namespace-id") String namespaceId,
+                           @QueryParam("graceful") String gracefulShutdownSecs) throws Exception {
+    LOG.info("---called stop all programs API---");
     List<BatchProgram> programs = validateAndGetBatchInput(request, BATCH_PROGRAMS_TYPE);
-
+    LOG.info("---programs - {}---", programs);
     List<ListenableFuture<BatchProgramResult>> issuedStops = new ArrayList<>(programs.size());
     for (final BatchProgram program : programs) {
+      LOG.info("---program - {}---", program);
       ProgramId programId = new ProgramId(namespaceId, program.getAppId(), program.getProgramType(),
-                                         program.getProgramId());
-      try {
-        List<ListenableFuture<ProgramRunId>> stops = lifecycleService.issueStop(programId, null);
-        for (ListenableFuture<ProgramRunId> stop : stops) {
-          ListenableFuture<BatchProgramResult> issuedStop =
-            Futures.transform(stop, (Function<ProgramRunId, BatchProgramResult>) input ->
-              new BatchProgramResult(program, HttpResponseStatus.OK.code(), null, input.getRun()));
-          issuedStops.add(issuedStop);
+                                          program.getProgramId());
+      LOG.info("---programId - {}---", programId);
+      if (gracefulShutdownSecs != null) {
+        LOG.info("---graceful value - {}---", gracefulShutdownSecs);
+        if (Integer.parseInt(gracefulShutdownSecs) < 0) {
+          LOG.error("---Graceful shutdown passed is invalid - {}---", gracefulShutdownSecs);
+          return; // throw exception instead
         }
-      } catch (NotFoundException e) {
-        issuedStops.add(Futures.immediateFuture(
-          new BatchProgramResult(program, HttpResponseStatus.NOT_FOUND.code(), e.getMessage())));
-      } catch (BadRequestException e) {
-        issuedStops.add(Futures.immediateFuture(
-          new BatchProgramResult(program, HttpResponseStatus.BAD_REQUEST.code(), e.getMessage())));
+        long stoppingTs = System.currentTimeMillis();
+        long terminateTs = TimeUnit.MILLISECONDS.toSeconds(stoppingTs) + Integer.parseInt(gracefulShutdownSecs);
+        LOG.info("---StoppingTs - {}, terminateTs - {}---", stoppingTs, terminateTs);
+        lifecycleService.publishStoppingToTms(programId, Integer.parseInt(gracefulShutdownSecs));
+        LOG.info("---called store.stopping()---");
+        return;
+      } else {
+        LOG.info("---graceful value null, continuing with regular flow---");
+        try {
+          List<ListenableFuture<ProgramRunId>> stops = lifecycleService.issueStop(programId, null);
+          for (ListenableFuture<ProgramRunId> stop : stops) {
+            ListenableFuture<BatchProgramResult> issuedStop =
+              Futures.transform(stop, (Function<ProgramRunId, BatchProgramResult>) input ->
+                new BatchProgramResult(program, HttpResponseStatus.OK.code(), null, input.getRun()));
+            issuedStops.add(issuedStop);
+          }
+        } catch (NotFoundException e) {
+          issuedStops.add(Futures.immediateFuture(
+            new BatchProgramResult(program, HttpResponseStatus.NOT_FOUND.code(), e.getMessage())));
+        } catch (BadRequestException e) {
+          issuedStops.add(Futures.immediateFuture(
+            new BatchProgramResult(program, HttpResponseStatus.BAD_REQUEST.code(), e.getMessage())));
+        }
       }
     }
 

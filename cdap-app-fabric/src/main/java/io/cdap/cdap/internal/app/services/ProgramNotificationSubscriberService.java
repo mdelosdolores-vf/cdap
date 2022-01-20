@@ -406,6 +406,7 @@ public class ProgramNotificationSubscriberService extends AbstractNotificationSu
         writeToHeartBeatTable(recordedRunRecord, resumeTime, programHeartbeatTable);
         break;
       case STOPPING:
+        LOG.info("---Stopping event read from tms, will persist it in db now---");
         Map<String, String> notificationProperties = notification.getProperties();
         long stoppingTsSecs = getTimeSeconds(notificationProperties, ProgramOptionConstants.STOPPING_TIME);
         if (stoppingTsSecs == -1L) {
@@ -417,6 +418,7 @@ public class ProgramNotificationSubscriberService extends AbstractNotificationSu
         recordedRunRecord = appMetadataStore.recordProgramStopping(programRunId, messageIdBytes, stoppingTsSecs,
                                                                    terminateTsSecs);
         writeToHeartBeatTable(recordedRunRecord, stoppingTsSecs, programHeartbeatTable);
+        LOG.info("---Wrote run record {} to db---", recordedRunRecord);
         break;
       case COMPLETED:
       case KILLED:

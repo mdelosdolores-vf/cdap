@@ -149,6 +149,7 @@ public class RuntimeClientService extends AbstractRetryableScheduledService {
    * @param stopper a Runnable
    */
   public void onProgramStopRequested(Runnable stopper) {
+    LOG.info("---Inside RTCS, calling onstoprequested---");
     runtimeClient.onProgramStopRequested(stopper);
   }
 

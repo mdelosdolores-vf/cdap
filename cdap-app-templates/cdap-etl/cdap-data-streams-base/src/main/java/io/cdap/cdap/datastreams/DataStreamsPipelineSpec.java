@@ -32,7 +32,6 @@ import java.util.UUID;
 public class DataStreamsPipelineSpec extends PipelineSpec {
   private final long batchIntervalMillis;
   private final String extraJavaOpts;
-  private final boolean stopGracefully;
   private final boolean checkpointsDisabled;
   private final boolean isUnitTest;
   private final String checkpointDirectory;
@@ -41,15 +40,13 @@ public class DataStreamsPipelineSpec extends PipelineSpec {
   private DataStreamsPipelineSpec(Set<StageSpec> stages, Set<Connection> connections,
                                   Resources resources, Resources driverResources, Resources clientResources,
                                   boolean stageLoggingEnabled, boolean processTimingEnabled, long batchIntervalMillis,
-                                  String extraJavaOpts, int numOfRecordsPreview,
-                                  boolean stopGracefully, Map<String, String> properties,
+                                  String extraJavaOpts, int numOfRecordsPreview, Map<String, String> properties,
                                   boolean checkpointsDisabled, boolean isUnitTest, String checkpointDirectory,
                                   String pipelineId, Set<String> connectionsUsed) {
     super(stages, connections, resources, driverResources, clientResources, stageLoggingEnabled, processTimingEnabled,
           numOfRecordsPreview, properties, connectionsUsed);
     this.batchIntervalMillis = batchIntervalMillis;
     this.extraJavaOpts = extraJavaOpts;
-    this.stopGracefully = stopGracefully;
     this.checkpointsDisabled = checkpointsDisabled;
     this.isUnitTest = isUnitTest;
     this.checkpointDirectory = checkpointDirectory;
@@ -62,10 +59,6 @@ public class DataStreamsPipelineSpec extends PipelineSpec {
 
   public String getExtraJavaOpts() {
     return extraJavaOpts;
-  }
-
-  public boolean isStopGracefully() {
-    return stopGracefully;
   }
 
   public boolean isCheckpointsDisabled() {
@@ -100,7 +93,6 @@ public class DataStreamsPipelineSpec extends PipelineSpec {
 
     return batchIntervalMillis == that.batchIntervalMillis &&
       Objects.equals(extraJavaOpts, that.extraJavaOpts) &&
-      stopGracefully == that.stopGracefully &&
       checkpointsDisabled == that.checkpointsDisabled &&
       isUnitTest == that.isUnitTest &&
       Objects.equals(checkpointDirectory, that.checkpointDirectory) &&
@@ -110,7 +102,7 @@ public class DataStreamsPipelineSpec extends PipelineSpec {
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), batchIntervalMillis, extraJavaOpts,
-                        stopGracefully, checkpointsDisabled, isUnitTest, checkpointDirectory, pipelineId);
+                        checkpointsDisabled, isUnitTest, checkpointDirectory, pipelineId);
   }
 
   @Override
@@ -118,7 +110,6 @@ public class DataStreamsPipelineSpec extends PipelineSpec {
     return "DataStreamsPipelineSpec{" +
       "batchIntervalMillis=" + batchIntervalMillis +
       ", extraJavaOpts='" + extraJavaOpts + '\'' +
-      ", stopGracefully=" + stopGracefully +
       ", checkpointsDisabled=" + checkpointsDisabled +
       ", isUnitTest=" + isUnitTest +
       ", checkpointDirectory='" + checkpointDirectory + '\'' +
@@ -140,7 +131,6 @@ public class DataStreamsPipelineSpec extends PipelineSpec {
   public static class Builder extends PipelineSpec.Builder<Builder> {
     private final long batchIntervalMillis;
     private String extraJavaOpts;
-    private boolean stopGracefully;
     private boolean checkpointsDisabled;
     private boolean isUnitTest;
     private String checkpointDirectory;
@@ -152,7 +142,6 @@ public class DataStreamsPipelineSpec extends PipelineSpec {
 
     public Builder(long batchIntervalMillis, String pipelineId) {
       this.batchIntervalMillis = batchIntervalMillis;
-      this.stopGracefully = false;
       this.checkpointsDisabled = false;
       this.isUnitTest = false;
       this.checkpointDirectory = "";
@@ -161,11 +150,6 @@ public class DataStreamsPipelineSpec extends PipelineSpec {
 
     public Builder setExtraJavaOpts(String extraJavaOpts) {
       this.extraJavaOpts = extraJavaOpts;
-      return this;
-    }
-
-    public Builder setStopGracefully(boolean stopGracefully) {
-      this.stopGracefully = stopGracefully;
       return this;
     }
 
@@ -188,9 +172,8 @@ public class DataStreamsPipelineSpec extends PipelineSpec {
     public DataStreamsPipelineSpec build() {
       return new DataStreamsPipelineSpec(stages, connections, resources, driverResources, clientResources,
                                          stageLoggingEnabled, processTimingEnabled, batchIntervalMillis, extraJavaOpts,
-                                         numOfRecordsPreview, stopGracefully, properties,
-                                         checkpointsDisabled, isUnitTest, checkpointDirectory, pipelineId,
-                                         connectionsUsed);
+                                         numOfRecordsPreview, properties, checkpointsDisabled, isUnitTest,
+                                         checkpointDirectory, pipelineId, connectionsUsed);
     }
   }
 }
