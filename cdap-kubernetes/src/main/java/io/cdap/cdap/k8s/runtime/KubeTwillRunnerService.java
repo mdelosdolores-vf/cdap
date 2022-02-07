@@ -219,9 +219,11 @@ public class KubeTwillRunnerService implements TwillRunnerService {
         watcher.start();
       });
 
-      // start job cleaner service. Job cleaner is scheduled when TwillController is created
+      // start job cleaner service
       jobCleanerService =
         Executors.newSingleThreadScheduledExecutor(Threads.createDaemonThreadFactory("kube-job-cleaner"));
+      jobCleanerService.scheduleAtFixedRate(new KubeJobCleaner(batchV1Api, selector, jobCleanBatchSize),
+                                            10, jobCleanupIntervalMins, TimeUnit.MINUTES);
     } catch (IOException e) {
       throw new IllegalStateException("Unable to get Kubernetes API Client", e);
     }
@@ -515,10 +517,6 @@ public class KubeTwillRunnerService implements TwillRunnerService {
     String runtimeNamespace = meta.getLabels().getOrDefault(KubeMasterEnvironment.NAMESPACE_PROPERTY, kubeNamespace);
     KubeTwillController controller = new KubeTwillController(runtimeNamespace, runId, discoveryServiceClient,
                                                              apiClient, resourceType, meta);
-
-    jobCleanerService.scheduleAtFixedRate(new KubeJobCleaner(batchV1Api, runtimeNamespace, selector, jobCleanBatchSize),
-                                          10, jobCleanupIntervalMins, TimeUnit.MINUTES);
-
     Location appLocation = getApplicationLocation(appName, runId);
     controller.onTerminated(() -> {
       try {

@@ -76,7 +76,6 @@ public class DistributedProgramRunnerTxTimeoutTest {
       Id.Namespace.DEFAULT, new Id.Artifact(Id.Namespace.DEFAULT, "artifact", new ArtifactVersion("0.1")), app);
     app.configure(configurer, () -> null);
     appSpec = configurer.createSpecification("app", "1.0");
-    // System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(appSpec));
     NamespaceQueryAdmin namespaceQueryAdmin = new SimpleNamespaceQueryAdmin();
 
     cConf.setInt(TxConstants.Manager.CFG_TX_MAX_TIMEOUT, 60);

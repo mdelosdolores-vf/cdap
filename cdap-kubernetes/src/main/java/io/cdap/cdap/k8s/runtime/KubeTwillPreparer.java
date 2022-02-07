@@ -315,10 +315,9 @@ class KubeTwillPreparer implements DependentTwillPreparer, StatefulTwillPreparer
   public TwillPreparer withConfiguration(Map<String, String> config) {
     if (config.containsKey(KubeMasterEnvironment.NAMESPACE_PROPERTY)) {
       programRuntimeNamespace = config.get(KubeMasterEnvironment.NAMESPACE_PROPERTY);
-    } else {
-      for (String runnableName : runnables) {
-        withEnv(runnableName, config);
-      }
+    }
+    for (String runnableName : runnables) {
+      withEnv(runnableName, config);
     }
     return this;
   }
