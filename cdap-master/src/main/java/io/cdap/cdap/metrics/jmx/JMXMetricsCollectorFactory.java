@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Cask Data, Inc.
+ * Copyright © 2022 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,24 +14,14 @@
  * the License.
  */
 
-package io.cdap.cdap.internal.provision;
+package io.cdap.cdap.metrics.jmx;
 
-import io.cdap.cdap.runtime.spi.provisioner.Provisioner;
-
-import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * Provides provisioner config
+ * Factory for creating {@link JMXMetricsCollector}.
  */
-public interface ProvisionerConfigProvider {
+public interface JMXMetricsCollectorFactory {
 
-  /**
-   * load the configs for the provisioners
-   *
-   * @param provisioners the set provisioner names to get the config
-   * @return the map of the configs of the provisioners
-   */
-  Map<String, ProvisionerConfig> loadProvisionerConfigs(Collection<Provisioner> provisioners);
+  JMXMetricsCollector create(Map<String, String> metricTags);
 }

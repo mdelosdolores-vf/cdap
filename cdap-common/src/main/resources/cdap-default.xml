@@ -1349,6 +1349,46 @@
     </description>
   </property>
 
+  <property>
+    <name>system.dataset.remote.retry.policy.base.delay.ms</name>
+    <value>100</value>
+    <description>
+      The base delay between retries in milliseconds
+    </description>
+  </property>
+
+  <property>
+    <name>system.dataset.remote.retry.policy.max.delay.ms</name>
+    <value>5000</value>
+    <description>
+      The maximum delay between retries in milliseconds
+    </description>
+  </property>
+
+  <property>
+    <name>system.dataset.remote.retry.policy.max.retries</name>
+    <value>5000</value>
+    <description>
+      The maximum number of retries to attempt before aborting
+    </description>
+  </property>
+
+  <property>
+    <name>system.dataset.remote.retry.policy.max.time.secs</name>
+    <value>7200</value>
+    <description>
+      The maximum elapsed time in seconds before retries are aborted
+    </description>
+  </property>
+
+  <property>
+    <name>system.dataset.remote.retry.policy.type</name>
+    <value>exponential.backoff</value>
+    <description>
+      The type of retry policy for notification publish or subscription. Allowed options:
+      "none", "fixed.delay", or "exponential.backoff".
+    </description>
+  </property>
 
   <!-- Explore Service Configuration -->
 
@@ -2737,7 +2777,7 @@
 
   <property>
     <name>metrics.processor.queue.size</name>
-    <value>20000</value>
+    <value>1000</value>
     <description>
       Maximum size of a queue where the metrics processor temporarily stores
       newly-fetched metrics in-memory before persisting them
@@ -4871,6 +4911,22 @@
     <value>5000</value>
     <description>
       The maximum number of records that can be set in preview configuration.
+    </description>
+  </property>
+
+  <property>
+    <name>provisioner.system.properties.gcp-dataproc.root.url</name>
+    <value>dataproc.googleapis.com:443</value>
+    <description>
+      The default Root URL for Dataproc.
+    </description>
+  </property>
+
+  <property>
+    <name>provisioner.system.properties.gcp-existing-dataproc.root.url</name>
+    <value>dataproc.googleapis.com:443</value>
+    <description>
+      The default Root URL for Dataproc.
     </description>
   </property>
 </configuration>

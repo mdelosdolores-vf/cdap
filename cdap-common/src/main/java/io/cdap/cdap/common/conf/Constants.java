@@ -131,6 +131,7 @@ public final class Constants {
     public static final String AUTHENTICATION = "authentication";
     public static final String TASK_WORKER = "task.worker";
     public static final String ARTIFACT_LOCALIZER = "artifact.localizer";
+    public static final String SYSTEM_METRICS_EXPORTER = "system.metrics.exporter";
 
     public static final String SERVICE_INSTANCE_TABLE_NAME = "cdap.services.instances";
     /** Scheduler queue name to submit the master service app. */
@@ -931,8 +932,8 @@ public final class Constants {
      * Flow control metrics
      */
     public static final class FlowControl {
-      public static final String WORKFLOWS_LAUNCHING_COUNT = "flowcontrol.workflows.launching.count";
-      public static final String WORKFLOWS_RUNNING_COUNT = "flowcontrol.workflows.running.count";
+      public static final String LAUNCHING_COUNT = "flowcontrol.launching.count";
+      public static final String RUNNING_COUNT = "flowcontrol.running.count";
     }
 
     /**
