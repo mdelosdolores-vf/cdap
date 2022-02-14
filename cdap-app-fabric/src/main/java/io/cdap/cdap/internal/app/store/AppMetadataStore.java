@@ -528,9 +528,8 @@ public class AppMetadataStore {
       // Update the parent Workflow run record by adding node id and program run id in the properties
       Map<String, String> properties = new HashMap<>(record.getProperties());
       properties.put(workflowNodeId, programRunId.getRun());
-      writeToStructuredTableWithPrimaryKeys(
-        runRecordFields, RunRecordDetail.builder(record).setProperties(properties).setSourceId(sourceId).build(),
-        getRunRecordsTable(), StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+      writeToRunRecordTableWithPrimaryKeys(
+        runRecordFields, RunRecordDetail.builder(record).setProperties(properties).setSourceId(sourceId).build());
     }
   }
 
@@ -586,6 +585,7 @@ public class AppMetadataStore {
       .setSystemArgs(systemArgs)
       .setCluster(cluster)
       .setProfileId(profileId.get())
+      .setPeerName(systemArgs.get(ProgramOptionConstants.PEER_NAME))
       .setSourceId(sourceId)
       .setArtifactId(artifactId)
       .setPrincipal(systemArgs.get(ProgramOptionConstants.PRINCIPAL))
@@ -645,8 +645,7 @@ public class AppMetadataStore {
       .setCluster(cluster)
       .setSourceId(sourceId)
       .build();
-    writeToStructuredTableWithPrimaryKeys(
-      key, meta, getRunRecordsTable(), StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+    writeToRunRecordTableWithPrimaryKeys(key, meta);
     LOG.trace("Recorded {} for program {}", ProgramRunClusterStatus.PROVISIONED, programRunId);
     return meta;
   }
@@ -685,8 +684,7 @@ public class AppMetadataStore {
       .setCluster(cluster)
       .setSourceId(sourceId)
       .build();
-    writeToStructuredTableWithPrimaryKeys(
-      key, meta, getRunRecordsTable(), StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+    writeToRunRecordTableWithPrimaryKeys(key, meta);
     LOG.trace("Recorded {} for program {}", ProgramRunClusterStatus.DEPROVISIONING, programRunId);
     return meta;
   }
@@ -726,8 +724,7 @@ public class AppMetadataStore {
       .setCluster(cluster)
       .setSourceId(sourceId)
       .build();
-    writeToStructuredTableWithPrimaryKeys(
-      key, meta, getRunRecordsTable(), StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+    writeToRunRecordTableWithPrimaryKeys(key, meta);
     LOG.trace("Recorded {} for program {}", ProgramRunClusterStatus.DEPROVISIONED, programRunId);
     return meta;
   }
@@ -766,8 +763,7 @@ public class AppMetadataStore {
       .setCluster(cluster)
       .setSourceId(sourceId)
       .build();
-    writeToStructuredTableWithPrimaryKeys(
-      key, meta, getRunRecordsTable(), StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+    writeToRunRecordTableWithPrimaryKeys(key, meta);
     LOG.trace("Recorded {} for program {}", ProgramRunClusterStatus.ORPHANED, programRunId);
     return meta;
   }
@@ -802,6 +798,7 @@ public class AppMetadataStore {
       .setProperties(getRecordProperties(systemArgs, runtimeArgs))
       .setSystemArgs(systemArgs)
       .setProfileId(profileId.orElse(null))
+      .setPeerName(systemArgs.get(ProgramOptionConstants.PEER_NAME))
       .setArtifactId(artifactId)
       .setSourceId(sourceId)
       .setPrincipal(systemArgs.get(ProgramOptionConstants.PRINCIPAL))
@@ -818,8 +815,7 @@ public class AppMetadataStore {
   private void writeNewRunRecord(RunRecordDetail meta, String typeRunRecordCompleted) throws IOException {
     List<Field<?>> fields = getProgramRunInvertedTimeKey(typeRunRecordCompleted,
                                                          meta.getProgramRunId(), meta.getStartTs());
-    writeToStructuredTableWithPrimaryKeys(fields, meta, getRunRecordsTable(),
-                                          StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+    writeToRunRecordTableWithPrimaryKeys(fields, meta);
     List<Field<?>> countKey = getProgramCountPrimaryKeys(TYPE_COUNT, meta.getProgramRunId().getParent());
     getProgramCountsTable().increment(countKey, StoreDefinition.AppMetadataStore.COUNTS, 1L);
   }
@@ -866,8 +862,7 @@ public class AppMetadataStore {
       .setTwillRunId(twillRunId)
       .setSourceId(sourceId)
       .build();
-    writeToStructuredTableWithPrimaryKeys(
-      key, meta, getRunRecordsTable(), StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+    writeToRunRecordTableWithPrimaryKeys(key, meta);
     LOG.trace("Recorded {} for program {}", ProgramRunStatus.STARTING, programRunId);
     return meta;
   }
@@ -914,8 +909,7 @@ public class AppMetadataStore {
       .setTwillRunId(twillRunId)
       .setSourceId(sourceId)
       .build();
-    writeToStructuredTableWithPrimaryKeys(
-      key, meta, getRunRecordsTable(), StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+    writeToRunRecordTableWithPrimaryKeys(key, meta);
     LOG.trace("Recorded {} for program {}", ProgramRunStatus.RUNNING, programRunId);
     return meta;
   }
@@ -990,8 +984,7 @@ public class AppMetadataStore {
       }
     }
     RunRecordDetail meta = builder.build();
-    writeToStructuredTableWithPrimaryKeys(
-      key, meta, getRunRecordsTable(), StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+    writeToRunRecordTableWithPrimaryKeys(key, meta);
     LOG.trace("Recorded {} for program {}", toStatus, programRunId);
     return meta;
   }
@@ -1038,8 +1031,7 @@ public class AppMetadataStore {
       .setTerminateTs(terminateTsSecs)
       .setSourceId(sourceId)
       .build();
-    writeToStructuredTableWithPrimaryKeys(
-      key, meta, getRunRecordsTable(), StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+    writeToRunRecordTableWithPrimaryKeys(key, meta);
     LOG.trace("Recorded {} for program {}", ProgramRunStatus.STOPPING, programRunId);
     return meta;
   }
@@ -1086,8 +1078,7 @@ public class AppMetadataStore {
       .setStatus(runStatus)
       .setSourceId(sourceId)
       .build();
-    writeToStructuredTableWithPrimaryKeys(
-      key, meta, getRunRecordsTable(), StoreDefinition.AppMetadataStore.RUN_RECORD_DATA);
+    writeToRunRecordTableWithPrimaryKeys(key, meta);
     LOG.trace("Recorded {} for program {}", runStatus, programRunId);
     return meta;
   }
@@ -1865,6 +1856,13 @@ public class AppMetadataStore {
     table.upsert(keys);
   }
 
+  private void writeToRunRecordTableWithPrimaryKeys(List<Field<?>> keys, RunRecordDetail meta) throws IOException {
+    StructuredTable table = getRunRecordsTable();
+    keys.add(Fields.stringField(StoreDefinition.AppMetadataStore.RUN_RECORD_DATA, GSON.toJson(meta)));
+    keys.add(Fields.stringField(StoreDefinition.AppMetadataStore.PEER_NAME, meta.getPeerName()));
+    table.upsert(keys);
+  }
+
   private List<Field<?>> getRunRecordStatusPrefix(String status) {
     List<Field<?>> fields = new ArrayList<>();
     fields.add(Fields.stringField(StoreDefinition.AppMetadataStore.RUN_STATUS, status));
@@ -1898,6 +1896,15 @@ public class AppMetadataStore {
         status, new ApplicationId(programId.getNamespace(), programId.getApplication(), programId.getVersion()));
     fields.add(Fields.stringField(StoreDefinition.AppMetadataStore.PROGRAM_TYPE_FIELD, programId.getType().name()));
     fields.add(Fields.stringField(StoreDefinition.AppMetadataStore.PROGRAM_FIELD, programId.getProgram()));
+    return fields;
+  }
+
+  private List<Field<?>> getRunRecordPeerPrefix(String status, @Nullable String peerName) {
+    List<Field<?>> fields = getRunRecordStatusPrefix(status);
+    if (peerName == null) {
+      return fields;
+    }
+    fields.add(Fields.stringField(StoreDefinition.AppMetadataStore.PEER_NAME, peerName));
     return fields;
   }
 
