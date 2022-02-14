@@ -30,13 +30,20 @@ import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import io.cdap.cdap.api.app.ApplicationSpecification;
 import io.cdap.cdap.api.artifact.ApplicationClass;
 import io.cdap.cdap.api.common.RuntimeArguments;
+import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.Plugin;
+import io.cdap.cdap.api.plugin.Requirements;
+import io.cdap.cdap.api.service.worker.RunnableTaskRequest;
 import io.cdap.cdap.app.deploy.ConfigResponse;
 import io.cdap.cdap.app.deploy.Configurator;
+import io.cdap.cdap.app.deploy.DispatchResponse;
+import io.cdap.cdap.app.deploy.Dispatcher;
 import io.cdap.cdap.app.guice.ClusterMode;
 import io.cdap.cdap.app.program.Program;
 import io.cdap.cdap.app.program.ProgramDescriptor;
@@ -51,19 +58,26 @@ import io.cdap.cdap.common.lang.jar.BundleJarUtil;
 import io.cdap.cdap.common.lang.jar.ClassLoaderFolder;
 import io.cdap.cdap.common.twill.TwillAppNames;
 import io.cdap.cdap.common.utils.DirUtils;
+import io.cdap.cdap.internal.app.ApplicationSpecificationAdapter;
 import io.cdap.cdap.internal.app.deploy.ConfiguratorFactory;
+import io.cdap.cdap.internal.app.deploy.DispatcherFactory;
 import io.cdap.cdap.internal.app.deploy.pipeline.AppDeploymentInfo;
 import io.cdap.cdap.internal.app.deploy.pipeline.AppDeploymentRuntimeInfo;
+import io.cdap.cdap.internal.app.deploy.pipeline.AppLaunchInfo;
 import io.cdap.cdap.internal.app.deploy.pipeline.AppSpecInfo;
 import io.cdap.cdap.internal.app.runtime.AbstractListener;
 import io.cdap.cdap.internal.app.runtime.BasicArguments;
 import io.cdap.cdap.internal.app.runtime.ProgramOptionConstants;
 import io.cdap.cdap.internal.app.runtime.ProgramRunners;
 import io.cdap.cdap.internal.app.runtime.SimpleProgramOptions;
+import io.cdap.cdap.internal.app.runtime.artifact.ApplicationClassCodec;
 import io.cdap.cdap.internal.app.runtime.artifact.ArtifactDetail;
 import io.cdap.cdap.internal.app.runtime.artifact.ArtifactRepository;
 import io.cdap.cdap.internal.app.runtime.artifact.Artifacts;
+import io.cdap.cdap.internal.app.runtime.artifact.RequirementsCodec;
 import io.cdap.cdap.internal.app.runtime.service.SimpleRuntimeInfo;
+import io.cdap.cdap.internal.app.worker.DispatchPipelineTask;
+import io.cdap.cdap.internal.io.SchemaTypeAdapter;
 import io.cdap.cdap.proto.InMemoryProgramLiveInfo;
 import io.cdap.cdap.proto.NotRunningProgramLiveInfo;
 import io.cdap.cdap.proto.ProgramLiveInfo;
@@ -120,6 +134,7 @@ public abstract class AbstractProgramRuntimeService extends AbstractIdleService 
                                                                                       ProgramController.State.KILLED,
                                                                                       ProgramController.State.ERROR);
   private final CConfiguration cConf;
+  private final DispatcherFactory dispatcherFactory;
   private final ReadWriteLock runtimeInfosLock;
   private final Table<ProgramType, RunId, RuntimeInfo> runtimeInfos;
   private final ProgramRunnerFactory programRunnerFactory;
@@ -134,8 +149,10 @@ public abstract class AbstractProgramRuntimeService extends AbstractIdleService 
                                           ProgramRunnerFactory programRunnerFactory,
                                           ArtifactRepository noAuthArtifactRepository,
                                           ProgramStateWriter programStateWriter,
-                                          ConfiguratorFactory configuratorFactory) {
+                                          ConfiguratorFactory configuratorFactory,
+                                          DispatcherFactory dispatcherFactory) {
     this.cConf = cConf;
+    this.dispatcherFactory = dispatcherFactory;
     this.runtimeInfosLock = new ReentrantReadWriteLock();
     this.runtimeInfos = HashBasedTable.create();
     this.programRunnerFactory = programRunnerFactory;
@@ -188,7 +205,7 @@ public abstract class AbstractProgramRuntimeService extends AbstractIdleService 
         ApplicationSpecification appSpec = programDescriptor.getApplicationSpecification();
         ProgramDescriptor newProgramDescriptor = programDescriptor;
 
-        boolean isPreview = Boolean.valueOf(
+        boolean isPreview = Boolean.parseBoolean(
           options.getArguments().getOption(ProgramOptionConstants.IS_PREVIEW, "false"));
         // do the app spec regeneration if the mode is on premise, for isolated mode, the regeneration is done on the
         // runtime environment before the program launch
@@ -215,7 +232,9 @@ public abstract class AbstractProgramRuntimeService extends AbstractIdleService 
         // Create and run the program
         Program executableProgram = createProgram(cConf, runner, newProgramDescriptor, artifactDetail, tempDir);
         cleanUpTaskRef.set(createCleanupTask(cleanUpTaskRef.get(), executableProgram));
-
+        AppLaunchInfo appLaunchInfo = new AppLaunchInfo(executableProgram, optionsWithPlugins);
+        Dispatcher dispatcher = this.dispatcherFactory.create(appLaunchInfo);
+        ListenableFuture<DispatchResponse> future = dispatcher.dispatch();
         controller.setProgramController(runner.run(executableProgram, optionsWithPlugins));
       } catch (Exception e) {
         controller.failed(e);

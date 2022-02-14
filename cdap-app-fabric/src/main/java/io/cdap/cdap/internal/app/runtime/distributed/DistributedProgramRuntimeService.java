@@ -23,8 +23,10 @@ import com.google.common.collect.Table;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.cdap.cdap.app.guice.AppFabricServiceRuntimeModule;
+import io.cdap.cdap.app.program.ProgramDescriptor;
 import io.cdap.cdap.app.runtime.AbstractProgramRuntimeService;
 import io.cdap.cdap.app.runtime.ProgramController;
+import io.cdap.cdap.app.runtime.ProgramOptions;
 import io.cdap.cdap.app.runtime.ProgramRunnerFactory;
 import io.cdap.cdap.app.runtime.ProgramStateWriter;
 import io.cdap.cdap.app.store.Store;
@@ -34,6 +36,7 @@ import io.cdap.cdap.common.io.Locations;
 import io.cdap.cdap.common.lang.Delegator;
 import io.cdap.cdap.common.twill.TwillAppNames;
 import io.cdap.cdap.internal.app.deploy.ConfiguratorFactory;
+import io.cdap.cdap.internal.app.deploy.DispatcherFactory;
 import io.cdap.cdap.internal.app.runtime.AbstractListener;
 import io.cdap.cdap.internal.app.runtime.artifact.ArtifactDetail;
 import io.cdap.cdap.internal.app.runtime.artifact.ArtifactRepository;
@@ -91,8 +94,8 @@ public final class DistributedProgramRuntimeService extends AbstractProgramRunti
                                    @Named(AppFabricServiceRuntimeModule.NOAUTH_ARTIFACT_REPO)
                                      ArtifactRepository noAuthArtifactRepository,
                                    Impersonator impersonator, ProgramStateWriter programStateWriter,
-                                   ConfiguratorFactory configuratorFactory) {
-    super(cConf, programRunnerFactory, noAuthArtifactRepository, programStateWriter, configuratorFactory);
+                                   ConfiguratorFactory configuratorFactory, DispatcherFactory dispatcherFactory) {
+    super(cConf, programRunnerFactory, noAuthArtifactRepository, programStateWriter, configuratorFactory, dispatcherFactory);
     this.twillRunner = twillRunner;
     this.store = store;
     this.impersonator = impersonator;

@@ -43,7 +43,7 @@ import org.apache.twill.api.TwillRunnerService;
 /**
  * Guice module for {@link ProgramRunnerFactory} used for program execution in {@link ClusterMode#ISOLATED} mode.
  */
-final class RemoteExecutionProgramRunnerModule extends AbstractModule {
+public final class RemoteExecutionProgramRunnerModule extends AbstractModule {
 
   private static final Key<TwillRunnerService> TWILL_RUNNER_SERVICE_KEY =
     Key.get(TwillRunnerService.class, Constants.AppFabric.RemoteExecution.class);

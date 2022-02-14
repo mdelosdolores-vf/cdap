@@ -26,6 +26,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import io.cdap.cdap.api.metrics.MetricsCollectionService;
+import io.cdap.cdap.app.guice.RemoteExecutionProgramRunnerModule;
 import io.cdap.cdap.common.conf.CConfiguration;
 import io.cdap.cdap.common.conf.Constants;
 import io.cdap.cdap.common.guice.ConfigModule;
@@ -96,6 +97,7 @@ public class TaskWorkerTwillRunnable extends AbstractTwillRunnable {
     modules.add(new MessagingClientModule());
     modules.add(new SystemAppModule());
     modules.add(new MetricsClientRuntimeModule().getDistributedModules());
+    modules.add(new RemoteExecutionProgramRunnerModule());
 
     // If MasterEnvironment is not available, assuming it is the old hadoop stack with ZK, Kafka
     MasterEnvironment masterEnv = MasterEnvironments.getMasterEnvironment();
