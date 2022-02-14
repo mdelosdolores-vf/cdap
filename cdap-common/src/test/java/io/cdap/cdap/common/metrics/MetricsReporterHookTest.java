@@ -18,6 +18,7 @@ package io.cdap.cdap.common.metrics;
 
 import io.cdap.cdap.api.metrics.MetricsCollectionService;
 import io.cdap.cdap.api.metrics.MetricsContext;
+import io.cdap.cdap.common.conf.CConfiguration;
 import io.cdap.http.internal.HandlerInfo;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
@@ -32,7 +33,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.anyInt;
 
 public class MetricsReporterHookTest {
     static final String TESTSERVICENAME = "test.Service";
@@ -47,7 +47,8 @@ public class MetricsReporterHookTest {
 
         HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "http://ignore");
         HandlerInfo handlerInfo = new HandlerInfo(TESTHANDLERNAME, TESTMETHODNAME);
-        MetricsReporterHook hook = new MetricsReporterHook(mockCollectionService, TESTSERVICENAME);
+        MetricsReporterHook hook = new MetricsReporterHook(CConfiguration.create(),
+                                                           mockCollectionService, TESTSERVICENAME);
 
         hook.preCall(request, null, handlerInfo);
         hook.postCall(request, HttpResponseStatus.OK, handlerInfo);
