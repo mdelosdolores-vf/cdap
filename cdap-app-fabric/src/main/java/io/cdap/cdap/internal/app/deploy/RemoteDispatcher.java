@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import io.cdap.cdap.api.artifact.ApplicationClass;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.metrics.MetricsCollectionService;
@@ -35,7 +36,7 @@ import io.cdap.cdap.internal.app.RemoteTaskExecutor;
 import io.cdap.cdap.internal.app.deploy.pipeline.AppLaunchInfo;
 import io.cdap.cdap.internal.app.runtime.artifact.ApplicationClassCodec;
 import io.cdap.cdap.internal.app.runtime.artifact.RequirementsCodec;
-import io.cdap.cdap.internal.app.worker.DispatchPipelineTask;
+import io.cdap.cdap.internal.app.worker.DispatchTask;
 import io.cdap.cdap.internal.io.SchemaTypeAdapter;
 import java.nio.charset.StandardCharsets;
 
@@ -52,7 +53,7 @@ public class RemoteDispatcher implements Dispatcher {
 
   @Inject
   public RemoteDispatcher(CConfiguration cConf, MetricsCollectionService metricsCollectionService,
-      RemoteClientFactory remoteClientFactory, AppLaunchInfo appLaunchInfo) {
+      RemoteClientFactory remoteClientFactory, @Assisted AppLaunchInfo appLaunchInfo) {
     this.appLaunchInfo = appLaunchInfo;
     this.remoteTaskExecutor = new RemoteTaskExecutor(cConf, metricsCollectionService,
         remoteClientFactory);
@@ -62,7 +63,7 @@ public class RemoteDispatcher implements Dispatcher {
   public ListenableFuture<DispatchResponse> dispatch() {
     try {
       RunnableTaskRequest request = RunnableTaskRequest.getBuilder(
-              DispatchPipelineTask.class.getName())
+              DispatchTask.class.getName())
           .withParam(GSON.toJson(appLaunchInfo))
           .build();
 

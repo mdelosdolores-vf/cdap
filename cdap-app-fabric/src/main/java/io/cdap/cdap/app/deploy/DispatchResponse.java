@@ -20,4 +20,6 @@ public interface DispatchResponse {
 
   int getExitCode();
 
+  Boolean isSuccessfulLaunch();
+
 }

@@ -20,8 +20,21 @@ import io.cdap.cdap.app.deploy.DispatchResponse;
 
 public class DefaultDispatchResponse implements DispatchResponse {
 
+  private final int exit;
+  private final Boolean isSuccessfulLaunch;
+
+  public DefaultDispatchResponse(int exit, Boolean isSuccessfulLaunch) {
+    this.exit = exit;
+    this.isSuccessfulLaunch = isSuccessfulLaunch;
+  }
+
   @Override
   public int getExitCode() {
-    return 0;
+    return exit;
+  }
+
+  @Override
+  public Boolean isSuccessfulLaunch() {
+    return isSuccessfulLaunch;
   }
 }

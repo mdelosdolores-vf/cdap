@@ -35,6 +35,8 @@ import io.cdap.cdap.internal.app.runtime.artifact.ArtifactRepositoryReader;
 import io.cdap.cdap.internal.app.runtime.artifact.PluginFinder;
 import io.cdap.cdap.internal.app.runtime.artifact.RemoteArtifactRepository;
 import io.cdap.cdap.internal.app.runtime.artifact.RemoteArtifactRepositoryReader;
+import io.cdap.cdap.internal.app.runtime.artifact.RemoteArtifactRepositoryReaderWithLocalization;
+import io.cdap.cdap.internal.app.runtime.artifact.RemoteArtifactRepositoryWithLocalization;
 import io.cdap.cdap.master.environment.MasterEnvironments;
 import io.cdap.cdap.master.spi.environment.MasterEnvironment;
 import io.cdap.cdap.proto.ProgramType;
@@ -43,7 +45,7 @@ import io.cdap.cdap.security.impersonation.UGIProvider;
 import org.apache.twill.discovery.DiscoveryService;
 import org.apache.twill.discovery.DiscoveryServiceClient;
 
-public class DispatchPipelineTaskModule extends AbstractModule {
+public class DispatchTaskModule extends AbstractModule {
 
   @Override
   protected void configure() {
@@ -63,10 +65,10 @@ public class DispatchPipelineTaskModule extends AbstractModule {
     bind(PluginFinder.class).to(RemoteWorkerPluginFinder.class);
     bind(UGIProvider.class).to(CurrentUGIProvider.class);
 
-    bind(ArtifactRepositoryReader.class).to(RemoteArtifactRepositoryReader.class).in(Scopes.SINGLETON);
+    bind(ArtifactRepositoryReader.class).to(RemoteArtifactRepositoryReaderWithLocalization.class).in(Scopes.SINGLETON);
     bind(NamespaceQueryAdmin.class).to(RemoteNamespaceQueryClient.class);
     bind(MetadataServiceClient.class).to(DefaultMetadataServiceClient.class);
 
-    bind(ArtifactRepository.class).to(RemoteArtifactRepository.class);
+    bind(ArtifactRepository.class).to(RemoteArtifactRepositoryWithLocalization.class);
   }
 }

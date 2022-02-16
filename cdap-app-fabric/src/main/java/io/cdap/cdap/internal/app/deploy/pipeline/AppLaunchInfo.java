@@ -16,24 +16,39 @@
 
 package io.cdap.cdap.internal.app.deploy.pipeline;
 
-import io.cdap.cdap.app.program.Program;
+import io.cdap.cdap.app.program.ProgramDescriptor;
 import io.cdap.cdap.app.runtime.ProgramOptions;
+import org.apache.twill.api.RunId;
 
 public class AppLaunchInfo {
 
-  private final Program program;
+  private final ProgramDescriptor programDescriptor;
+  private final RunId runId;
   private final ProgramOptions programOptions;
 
-  public AppLaunchInfo(Program program, ProgramOptions programOptions) {
-    this.program = program;
-    this.programOptions = programOptions;
-  }
+  private final boolean isDistributed;
 
-  public Program getProgram() {
-    return program;
+  public AppLaunchInfo(ProgramDescriptor programDescriptor, ProgramOptions programOptions,
+      RunId runId, boolean isDistributed) {
+    this.programDescriptor = programDescriptor;
+    this.programOptions = programOptions;
+    this.runId = runId;
+    this.isDistributed = isDistributed;
   }
 
   public ProgramOptions getProgramOptions() {
     return programOptions;
+  }
+
+  public ProgramDescriptor getProgramDescriptor() {
+    return programDescriptor;
+  }
+
+  public RunId getRunId() {
+    return runId;
+  }
+
+  public boolean isDistributed() {
+    return isDistributed;
   }
 }

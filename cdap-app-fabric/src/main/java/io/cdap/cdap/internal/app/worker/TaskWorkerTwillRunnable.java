@@ -26,7 +26,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import io.cdap.cdap.api.metrics.MetricsCollectionService;
+import io.cdap.cdap.app.guice.AppFabricServiceRuntimeModule;
 import io.cdap.cdap.app.guice.RemoteExecutionProgramRunnerModule;
+import io.cdap.cdap.app.guice.TwillModule;
 import io.cdap.cdap.common.conf.CConfiguration;
 import io.cdap.cdap.common.conf.Constants;
 import io.cdap.cdap.common.guice.ConfigModule;
@@ -88,7 +90,8 @@ public class TaskWorkerTwillRunnable extends AbstractTwillRunnable {
     List<Module> modules = new ArrayList<>();
 
     CoreSecurityModule coreSecurityModule = CoreSecurityRuntimeModule.getDistributedModule(cConf);
-
+    // modules.add(new AppFabricServiceRuntimeModule(cConf));
+    modules.add(new TwillModule());
     modules.add(new ConfigModule(cConf, hConf));
     modules.add(new LocalLocationModule());
     modules.add(new IOModule());
