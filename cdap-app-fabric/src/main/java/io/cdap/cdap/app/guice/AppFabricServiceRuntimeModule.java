@@ -335,12 +335,12 @@ public final class AppFabricServiceRuntimeModule extends RuntimeModule {
       install(
           new FactoryModuleBuilder()
               .implement(Dispatcher.class, InMemoryDispatcher.class)
-              .build(Key.get(ConfiguratorFactory.class, Names.named("local")))
+              .build(Key.get(DispatcherFactory.class, Names.named("local")))
       );
       install(
           new FactoryModuleBuilder()
               .implement(Dispatcher.class, RemoteDispatcher.class)
-              .build(Key.get(ConfiguratorFactory.class, Names.named("remote")))
+              .build(Key.get(DispatcherFactory.class, Names.named("remote")))
       );
 
       bind(DispatcherFactory.class).toProvider(DispatcherFactoryProvider.class);
