@@ -133,7 +133,7 @@ public class SystemWorkerServiceLauncher extends AbstractScheduledService {
               .setVirtualCores(cConf.getInt(Constants.ArtifactLocalizer.CONTAINER_CORES))
               .setMemory(cConf.getInt(Constants.ArtifactLocalizer.CONTAINER_MEMORY_MB),
                   ResourceSpecification.SizeUnit.MEGA)
-              .setInstances(cConf.getInt(Constants.TaskWorker.CONTAINER_COUNT))
+              .setInstances(cConf.getInt(Constants.SystemWorker.CONTAINER_COUNT))
               .build();
 
           LOG.info("Starting SystemWorker pool with {} instances", systemResourceSpec.getInstances());
@@ -149,7 +149,7 @@ public class SystemWorkerServiceLauncher extends AbstractScheduledService {
 
           if (twillPreparer instanceof DependentTwillPreparer) {
             twillPreparer = ((DependentTwillPreparer) twillPreparer)
-                .dependentRunnableNames(SystemWorkerTwillApplication.class.getSimpleName(),
+                .dependentRunnableNames(SystemWorkerTwillRunnable.class.getSimpleName(),
                     ArtifactLocalizerTwillRunnable.class.getSimpleName());
           }
 
