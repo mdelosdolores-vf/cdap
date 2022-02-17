@@ -88,14 +88,12 @@ public class SystemWorkerHttpHandlerInternal extends AbstractHttpHandler {
    */
   private final AtomicInteger requestProcessedCount = new AtomicInteger(0);
 
-  private final String metadataServiceEndpoint;
   private final MetricsCollectionService metricsCollectionService;
 
   public SystemWorkerHttpHandlerInternal(CConfiguration cConf, MetricsCollectionService metricsCollectionService) {
     this.runnableTaskLauncher = new RunnableTaskLauncher(cConf);
     this.metricsCollectionService = metricsCollectionService;
     this.REQUEST_LIMIT = cConf.getInt(Constants.SystemWorker.REQUEST_LIMIT);
-    this.metadataServiceEndpoint = cConf.get(Constants.TaskWorker.METADATA_SERVICE_END_POINT);
   }
 
   private void emitMetrics(TaskDetails taskDetails) {
@@ -142,26 +140,6 @@ public class SystemWorkerHttpHandlerInternal extends AbstractHttpHandler {
         .map(RunnableTaskParam::getEmbeddedTaskRequest)
         .map(RunnableTaskRequest::getClassName)
         .orElse(runnableTaskRequest.getClassName());
-  }
-
-  @GET
-  @Path("/token")
-  public void token(io.netty.handler.codec.http.HttpRequest request, HttpResponder responder) {
-    if (metadataServiceEndpoint == null) {
-      responder.sendString(HttpResponseStatus.NOT_IMPLEMENTED,
-          String.format("%s has not been set", Constants.TaskWorker.METADATA_SERVICE_END_POINT));
-      return;
-    }
-
-    try {
-      URL url = new URL(metadataServiceEndpoint);
-      HttpRequest tokenRequest = HttpRequest.get(url).addHeader("Metadata-Flavor", "Google").build();
-      HttpResponse tokenResponse = HttpRequests.execute(tokenRequest);
-      responder.sendByteArray(HttpResponseStatus.OK, tokenResponse.getResponseBody(), EmptyHttpHeaders.INSTANCE);
-    } catch (Exception ex) {
-      LOG.warn("Failed to fetch token from metadata service", ex);
-      responder.sendString(HttpResponseStatus.INTERNAL_SERVER_ERROR, exceptionToJson(ex), EmptyHttpHeaders.INSTANCE);
-    }
   }
 
   /**
