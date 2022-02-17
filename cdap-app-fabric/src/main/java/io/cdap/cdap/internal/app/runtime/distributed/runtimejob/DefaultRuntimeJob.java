@@ -62,7 +62,6 @@ import io.cdap.cdap.common.logging.LogSamplers;
 import io.cdap.cdap.common.logging.Loggers;
 import io.cdap.cdap.common.logging.LoggingContextAccessor;
 import io.cdap.cdap.common.logging.common.UncaughtExceptionHandler;
-import io.cdap.cdap.common.namespace.guice.NamespaceQueryAdminModule;
 import io.cdap.cdap.common.utils.DirUtils;
 import io.cdap.cdap.common.utils.Networks;
 import io.cdap.cdap.internal.app.ApplicationSpecificationAdapter;
@@ -451,7 +450,6 @@ public class DefaultRuntimeJob implements RuntimeJob {
     modules.add(new AuthenticationContextModules().getProgramContainerModule(cConf));
     modules.add(new MetricsClientRuntimeModule().getDistributedModules());
     modules.add(new MessagingServerRuntimeModule().getStandaloneModules());
-    modules.add(new NamespaceQueryAdminModule());
 
     modules.add(new AbstractModule() {
       @Override

@@ -132,19 +132,18 @@ public abstract class DistributedProgramRunner implements ProgramRunner, Program
   protected final CConfiguration cConf;
   protected final Configuration hConf;
   protected final ClusterMode clusterMode;
+  // Set only if ProgramRunner is not running remotely
+  protected NamespaceQueryAdmin namespaceQueryAdmin;
   private final TwillRunner twillRunner;
   private final Impersonator impersonator;
-  private final NamespaceQueryAdmin namespaceQueryAdmin;
 
   protected DistributedProgramRunner(CConfiguration cConf, Configuration hConf, Impersonator impersonator,
-                                     ClusterMode clusterMode, TwillRunner twillRunner,
-                                     NamespaceQueryAdmin namespaceQueryAdmin) {
+                                     ClusterMode clusterMode, TwillRunner twillRunner) {
     this.twillRunner = twillRunner;
     this.hConf = hConf;
     this.cConf = cConf;
     this.impersonator = impersonator;
     this.clusterMode = clusterMode;
-    this.namespaceQueryAdmin = namespaceQueryAdmin;
   }
 
   /**
@@ -771,6 +770,9 @@ public abstract class DistributedProgramRunner implements ProgramRunner, Program
    */
   @VisibleForTesting
   Map<String, String> getNamespaceConfigs(String namespace) throws Exception {
+    if (namespaceQueryAdmin == null) {
+      return new HashMap<>();
+    }
     return namespaceQueryAdmin.get(new NamespaceId(namespace)).getConfig().getConfigs();
   }
 }

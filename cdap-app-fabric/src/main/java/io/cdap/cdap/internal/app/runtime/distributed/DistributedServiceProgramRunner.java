@@ -18,6 +18,7 @@ package io.cdap.cdap.internal.app.runtime.distributed;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import io.cdap.cdap.api.app.ApplicationSpecification;
 import io.cdap.cdap.api.service.ServiceSpecification;
 import io.cdap.cdap.app.guice.ClusterMode;
@@ -46,9 +47,11 @@ public class DistributedServiceProgramRunner extends DistributedProgramRunner
   @Inject
   DistributedServiceProgramRunner(CConfiguration cConf, YarnConfiguration hConf,
                                   Impersonator impersonator, ClusterMode clusterMode,
-                                  @Constants.AppFabric.ProgramRunner TwillRunner twillRunner,
-                                  NamespaceQueryAdmin namespaceQueryAdmin) {
-    super(cConf, hConf, impersonator, clusterMode, twillRunner, namespaceQueryAdmin);
+                                  @Constants.AppFabric.ProgramRunner TwillRunner twillRunner, Injector injector) {
+    super(cConf, hConf, impersonator, clusterMode, twillRunner);
+    if (!cConf.getBoolean(Constants.AppFabric.PROGRAM_REMOTE_RUNNER, false)) {
+      this.namespaceQueryAdmin = injector.getInstance(NamespaceQueryAdmin.class);
+    }
   }
 
   @Override

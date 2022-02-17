@@ -19,6 +19,7 @@ package io.cdap.cdap.app.runtime.spark.distributed;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import io.cdap.cdap.api.app.ApplicationSpecification;
 import io.cdap.cdap.api.common.RuntimeArguments;
 import io.cdap.cdap.api.spark.Spark;
@@ -86,10 +87,13 @@ public final class DistributedSparkProgramRunner extends DistributedProgramRunne
                                        Impersonator impersonator, LocationFactory locationFactory,
                                        ClusterMode clusterMode,
                                        @Constants.AppFabric.ProgramRunner TwillRunner twillRunner,
-                                       NamespaceQueryAdmin namespaceQueryAdmin) {
-    super(cConf, hConf, impersonator, clusterMode, twillRunner, namespaceQueryAdmin);
+                                       Injector injector) {
+    super(cConf, hConf, impersonator, clusterMode, twillRunner);
     this.sparkCompat = sparkComat;
     this.locationFactory = locationFactory;
+    if (!cConf.getBoolean(Constants.AppFabric.PROGRAM_REMOTE_RUNNER, false)) {
+      this.namespaceQueryAdmin = injector.getInstance(NamespaceQueryAdmin.class);
+    }
   }
 
   @Override

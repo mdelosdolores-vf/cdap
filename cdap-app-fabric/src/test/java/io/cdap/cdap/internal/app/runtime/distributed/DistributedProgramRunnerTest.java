@@ -59,7 +59,7 @@ public class DistributedProgramRunnerTest {
     StoreDefinition.createAllTables(injector.getInstance(StructuredTableAdmin.class));
 
     distributedProgramRunner = new DistributedServiceProgramRunner(cConf, null, null, ClusterMode.ON_PREMISE, null,
-                                                                   namespaceQueryAdmin);
+                                                                   injector);
   }
 
   @AfterClass

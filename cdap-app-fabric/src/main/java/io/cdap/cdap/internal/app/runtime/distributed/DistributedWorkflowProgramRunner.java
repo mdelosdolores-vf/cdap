@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import io.cdap.cdap.api.Resources;
 import io.cdap.cdap.api.app.ApplicationSpecification;
 import io.cdap.cdap.api.common.RuntimeArguments;
@@ -84,9 +85,12 @@ public final class DistributedWorkflowProgramRunner extends DistributedProgramRu
                                    Impersonator impersonator, ClusterMode clusterMode,
                                    @Constants.AppFabric.ProgramRunner TwillRunner twillRunner,
                                    @Constants.AppFabric.ProgramRunner ProgramRunnerFactory programRunnerFactory,
-                                   NamespaceQueryAdmin namespaceQueryAdmin) {
-    super(cConf, hConf, impersonator, clusterMode, twillRunner, namespaceQueryAdmin);
+                                   Injector injector) {
+    super(cConf, hConf, impersonator, clusterMode, twillRunner);
     this.programRunnerFactory = programRunnerFactory;
+    if (!cConf.getBoolean(Constants.AppFabric.PROGRAM_REMOTE_RUNNER, false)) {
+      this.namespaceQueryAdmin = injector.getInstance(NamespaceQueryAdmin.class);
+    }
   }
 
   @Override
