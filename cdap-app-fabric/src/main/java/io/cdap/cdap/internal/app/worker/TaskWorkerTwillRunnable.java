@@ -52,6 +52,7 @@ import io.cdap.cdap.messaging.guice.MessagingClientModule;
 import io.cdap.cdap.metrics.guice.MetricsClientRuntimeModule;
 import io.cdap.cdap.proto.id.NamespaceId;
 import io.cdap.cdap.security.auth.context.AuthenticationContextModules;
+import io.cdap.cdap.security.authorization.AuthorizationEnforcementModule;
 import io.cdap.cdap.security.guice.CoreSecurityModule;
 import io.cdap.cdap.security.guice.CoreSecurityRuntimeModule;
 import io.cdap.cdap.security.guice.SecureStoreServerModule;
@@ -107,6 +108,7 @@ public class TaskWorkerTwillRunnable extends AbstractTwillRunnable {
     modules.add(new SecureStoreServerModule());
     modules.add(new ProvisionerModule());
     modules.add(new StorageModule());
+    modules.add(new AuthorizationEnforcementModule().getDistributedModules());
 
     // If MasterEnvironment is not available, assuming it is the old hadoop stack with ZK, Kafka
     MasterEnvironment masterEnv = MasterEnvironments.getMasterEnvironment();
