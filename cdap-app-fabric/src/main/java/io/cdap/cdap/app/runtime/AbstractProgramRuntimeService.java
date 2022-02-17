@@ -49,6 +49,15 @@ import io.cdap.cdap.proto.ProgramLiveInfo;
 import io.cdap.cdap.proto.ProgramType;
 import io.cdap.cdap.proto.id.ProgramId;
 import io.cdap.cdap.proto.id.ProgramRunId;
+import org.apache.twill.api.ResourceReport;
+import org.apache.twill.api.RunId;
+import org.apache.twill.api.TwillController;
+import org.apache.twill.api.TwillRunner;
+import org.apache.twill.api.TwillRunnerService;
+import org.apache.twill.common.Threads;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,14 +74,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.Nullable;
-import org.apache.twill.api.ResourceReport;
-import org.apache.twill.api.RunId;
-import org.apache.twill.api.TwillController;
-import org.apache.twill.api.TwillRunner;
-import org.apache.twill.api.TwillRunnerService;
-import org.apache.twill.common.Threads;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A ProgramRuntimeService that keeps an in memory map for all running programs.
@@ -133,9 +134,11 @@ public abstract class AbstractProgramRuntimeService extends AbstractIdleService 
     ProgramId programId = programDescriptor.getProgramId();
     ProgramRunId programRunId = programId.run(runId);
     DelayedProgramController controller = new DelayedProgramController(programRunId);
-    RuntimeInfo runtimeInfo = createRuntimeInfo(controller, programId, () -> { });
+    RuntimeInfo runtimeInfo = createRuntimeInfo(controller, programId, () -> {
+    });
     updateRuntimeInfo(runtimeInfo);
-    ProgramRunner runner = (ProgramRunners.getClusterMode(options) == ClusterMode.ON_PREMISE ? programRunnerFactory
+    ProgramRunner runner = (ProgramRunners.getClusterMode(options) == ClusterMode.ON_PREMISE
+        ? programRunnerFactory
         : Optional.ofNullable(remoteProgramRunnerFactory)
             .orElseThrow(UnsupportedOperationException::new)
     ).create(programId.getType());
@@ -144,17 +147,18 @@ public abstract class AbstractProgramRuntimeService extends AbstractIdleService 
       try {
         Dispatcher dispatcher = this.dispatcherFactory.create(appLaunchInfo);
         ListenableFuture<DispatchResponse> future = dispatcher.dispatch();
-        if(!future.get().isSuccessfulLaunch()) {
+        if (!future.get().isSuccessfulLaunch()) {
           throw new Exception("Failed");
         }
         RunRecordDetail runRecordDetail = store.getRun(programRunId);
         TwillController twillController = null;
-        if(remoteTwillRunnerService instanceof RemoteExecutionTwillRunnerService && runRecordDetail != null) {
+        if (remoteTwillRunnerService instanceof RemoteExecutionTwillRunnerService
+            && runRecordDetail != null) {
           twillController = ((RemoteExecutionTwillRunnerService) remoteTwillRunnerService)
               .createTwillControllerFromRunRecord(runRecordDetail);
         }
         ProgramController programController = null;
-        if(runner instanceof DistributedWorkflowProgramRunner) {
+        if (runner instanceof DistributedWorkflowProgramRunner) {
           programController = ((DistributedWorkflowProgramRunner) runner)
               .createProgramController(programRunId, twillController);
         }

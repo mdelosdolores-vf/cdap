@@ -22,7 +22,6 @@ import com.google.gson.GsonBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.assistedinject.Assisted;
 import com.google.inject.name.Named;
 import io.cdap.cdap.api.artifact.ApplicationClass;
 import io.cdap.cdap.api.data.schema.Schema;
@@ -45,6 +44,7 @@ import io.cdap.cdap.internal.app.runtime.artifact.RequirementsCodec;
 import io.cdap.cdap.internal.io.SchemaTypeAdapter;
 import io.cdap.cdap.security.auth.context.AuthenticationContextModules;
 import io.cdap.cdap.security.impersonation.Impersonator;
+
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
@@ -93,7 +93,7 @@ public class DispatchTask implements RunnableTask {
     private final InetAddress hostname;
 
     @Inject
-    public DispatchTaskRunner(CConfiguration cConf,
+    DispatchTaskRunner(CConfiguration cConf,
         ProgramRunnerFactory programRunnerFactory,
         ConfiguratorFactory configuratorFactory,
         Impersonator impersonator,
