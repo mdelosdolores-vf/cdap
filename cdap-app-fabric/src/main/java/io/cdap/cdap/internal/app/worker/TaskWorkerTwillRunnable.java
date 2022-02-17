@@ -41,6 +41,8 @@ import io.cdap.cdap.common.guice.ZKDiscoveryModule;
 import io.cdap.cdap.common.logging.LoggingContext;
 import io.cdap.cdap.common.logging.LoggingContextAccessor;
 import io.cdap.cdap.common.logging.ServiceLoggingContext;
+import io.cdap.cdap.data.runtime.StorageModule;
+import io.cdap.cdap.internal.provision.ProvisionerModule;
 import io.cdap.cdap.logging.appender.LogAppenderInitializer;
 import io.cdap.cdap.logging.guice.KafkaLogAppenderModule;
 import io.cdap.cdap.logging.guice.RemoteLogAppenderModule;
@@ -52,6 +54,7 @@ import io.cdap.cdap.proto.id.NamespaceId;
 import io.cdap.cdap.security.auth.context.AuthenticationContextModules;
 import io.cdap.cdap.security.guice.CoreSecurityModule;
 import io.cdap.cdap.security.guice.CoreSecurityRuntimeModule;
+import io.cdap.cdap.security.guice.SecureStoreServerModule;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.twill.api.AbstractTwillRunnable;
 import org.apache.twill.api.TwillContext;
@@ -101,6 +104,9 @@ public class TaskWorkerTwillRunnable extends AbstractTwillRunnable {
     modules.add(new SystemAppModule());
     modules.add(new MetricsClientRuntimeModule().getDistributedModules());
     modules.add(new RemoteExecutionProgramRunnerModule());
+    modules.add(new SecureStoreServerModule());
+    modules.add(new ProvisionerModule());
+    modules.add(new StorageModule());
 
     // If MasterEnvironment is not available, assuming it is the old hadoop stack with ZK, Kafka
     MasterEnvironment masterEnv = MasterEnvironments.getMasterEnvironment();

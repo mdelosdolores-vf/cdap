@@ -24,6 +24,7 @@ import io.cdap.cdap.app.runtime.NoOpProgramStateWriter;
 import io.cdap.cdap.app.runtime.ProgramRunner;
 import io.cdap.cdap.app.runtime.ProgramRunnerFactory;
 import io.cdap.cdap.app.runtime.ProgramRuntimeProvider;
+import io.cdap.cdap.app.runtime.ProgramRuntimeProvider.Mode;
 import io.cdap.cdap.app.runtime.ProgramStateWriter;
 import io.cdap.cdap.common.guice.SupplierProviderBridge;
 import io.cdap.cdap.common.namespace.NamespaceQueryAdmin;
@@ -59,7 +60,7 @@ public class DispatchTaskModule extends AbstractModule {
     MapBinder<ProgramType, ProgramRunner> runnerFactoryBinder =
         MapBinder.newMapBinder(binder(), ProgramType.class, ProgramRunner.class);
     bind(ProgramStateWriter.class).to(NoOpProgramStateWriter.class);
-    bind(ProgramRuntimeProvider.Mode.class).toInstance(ProgramRuntimeProvider.Mode.LOCAL);
+    bind(ProgramRuntimeProvider.Mode.class).toInstance(Mode.DISTRIBUTED);
     bind(ProgramRunnerFactory.class).to(DefaultProgramRunnerFactory.class).in(Scopes.SINGLETON);
 
     bind(PluginFinder.class).to(RemoteWorkerPluginFinder.class);
